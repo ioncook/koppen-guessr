@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Köppen-Guessr | Climate Master</title>
+    <link rel="stylesheet" href="streaks/streaks.css">
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --accent-color: #ababab;
+            --text-color: #ffffff;
+            --text-secondary: #888888;
+        }
+
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ababab, #666666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+        }
+
+        .modes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .mode-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 40px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-color);
+            background: #222;
+        }
+
+        .mode-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .mode-icon {
+            font-size: 2.5rem;
+        }
+
+        .mode-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .mode-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .badge {
+            background: var(--accent-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-weight: 800;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero">
+        <h1>KöppenGuessr</h1>
+        <p>A climate classification guessing game.</p>
+    </div>
+
+    <div class="modes-grid">
+        <a href="streaks/streaks.html" class="mode-card">
+            <span class="badge">ACTIVE</span>
+            <div class="mode-icon">🔥</div>
+            <div class="mode-title">Streaks</div>
+            <div class="mode-desc">Guess correctly to stay alive. How many global climates can you identify in a row?</div>
+        </a>
+
+        <a href="mapillary/mapillary.html" class="mode-card">
+            <span class="badge">ACTIVE</span>
+            <div class="mode-icon">🖼️</div>
+            <div class="mode-title">Images</div>
+            <div class="mode-desc">Identify the climate zone from street-level imagery. Scores are based on classification accuracy.</div>
+        </a>
+
+        <div class="mode-card disabled">
+            <span class="badge">COMING SOON</span>
+            <div class="mode-icon">📊</div>
+            <div class="mode-title">Data Duel</div>
+            <div class="mode-desc">Multiplayer climate analysis. Compare temperature and precip records to win.</div>
+        </div>
+    </div>
+
+    <footer style="margin-top: 80px; opacity: 0.5; font-size: 0.8rem;">
+        &copy; 2026 KöppenGuessr. Built with world-class climate data.
+    </footer>
+</body>
+
+</html>

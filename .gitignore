@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+source_data/
+.DS_Store
+*.nc
+city_data/
+*.csv
+# We keep cities.json because it's the processed database and small enough for GitHub (25MB)
