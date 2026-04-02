@@ -53,8 +53,8 @@ function loadNewCity() {
     flagEmoji.textContent = getFlagEmoji(currentCity.iso2);
     
     let adminStr = "";
-    if (currentCity.admin_name && currentCity.admin_name !== currentCity.city) {
-        adminStr = `${currentCity.admin_name}, `;
+    if (currentCity.admin_name && currentCity.admin_name.trim() !== currentCity.city) {
+        adminStr = `${currentCity.admin_name.trim()}, `;
     }
     adminCountry.textContent = `${adminStr}${currentCity.country}`;
     

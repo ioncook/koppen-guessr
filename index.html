@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Köppen-Guessr | Climate Master</title>
+    <title>KöppenGuessr</title>
     <style>
         :root {
             --bg-color: #0f0f0f;
@@ -138,16 +138,47 @@
         }
 
         @media (max-width: 600px) {
-            .hero h1 { font-size: 3rem; }
-            .modes-grid { grid-template-columns: 1fr; }
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .modes-grid {
+                grid-template-columns: 1fr;
+            }
         }
+
+        /* Unit Toggle Standard */
+        #unit-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 30px;
+            display: flex;
+            gap: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+        #unit-toggle:hover { border-color: #444; }
+        .unit.active { color: var(--text-color); }
+        .unit { color: #444; transition: color 0.2s; }
     </style>
 </head>
 
 <body>
+    <div id="unit-toggle">
+        <span id="unit-metric" class="unit active">Metric</span>
+        <span style="color:#2a2a2a">|</span>
+        <span id="unit-imperial" class="unit">Imperial</span>
+    </div>
+
     <div class="hero">
         <h1>KöppenGuessr</h1>
-        <p>Master the world's climate zones, one location at a time.</p>
     </div>
 
     <div class="modes-grid">
@@ -155,7 +186,8 @@
             <span class="badge">ACTIVE</span>
             <div class="mode-icon">🔥</div>
             <div class="mode-title">Streaks</div>
-            <div class="mode-desc">Guess correctly to stay alive. How many global climates can you identify in a row?</div>
+            <div class="mode-desc">Guess correctly to stay alive. How many global climates can you identify in a row?
+            </div>
             <div class="best-score">Personal Best: <strong id="best-streaks">0</strong></div>
         </a>
 
@@ -163,16 +195,17 @@
             <span class="badge">ACTIVE</span>
             <div class="mode-icon">🖼️</div>
             <div class="mode-title">Images</div>
-            <div class="mode-desc">Identify the climate zone from street-level imagery. Scores are based on classification accuracy.</div>
-            <div class="best-score">Personal Best: <strong id="best-images">0</strong></div>
+            <div class="mode-desc">Identify the climate zone from street-level imagery. Scores are based on minimum geographic deviation.</div>
+            <div class="best-score">Min Deviation: <strong id="best-images">---</strong></div>
         </a>
 
         <a href="guesser/guesser.html" class="mode-card">
             <span class="badge">NEW</span>
             <div class="mode-icon">🔭</div>
             <div class="mode-title">Data Guesser</div>
-            <div class="mode-desc">Guess the city by analyzing its raw climate data. Compare attributes like monthly temperature and precipitation to find the answer.</div>
-            <div class="best-score">Personal Best: <strong id="best-guesser">---</strong> guesses</div>
+            <div class="mode-desc">Guess the city by analyzing its raw climate data. Compare attributes like monthly
+                temperature and precipitation to find the answer.</div>
+            <div class="best-score">Min Guesses: <strong id="best-guesser">---</strong></div>
         </a>
     </div>
 
@@ -181,13 +214,44 @@
     </footer>
 
     <script>
-        // Load persist scores from localStorage
-        document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
-        document.getElementById('best-images').textContent = localStorage.getItem('best_images') || 0;
+        // Use Global Unit State
+        let currentUnits = localStorage.getItem('site_units') || 'metric';
         
-        // Data Guesser: Show minimum guesses (lower is better, if solved)
-        const bestGuesser = localStorage.getItem('best_guesser_min');
-        document.getElementById('best-guesser').textContent = bestGuesser ? bestGuesser : '---';
+        function syncUI() {
+            document.querySelectorAll('.unit').forEach(u => u.classList.remove('active'));
+            document.getElementById(`unit-${currentUnits}`).classList.add('active');
+            
+            // Re-render scores based on units
+            renderScores();
+        }
+
+        document.getElementById('unit-toggle').onclick = () => {
+            currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
+            localStorage.setItem('site_units', currentUnits);
+            syncUI();
+        };
+
+        function renderScores() {
+            const isMetric = currentUnits === 'metric';
+            
+            // Streaks (Just a number)
+            document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
+
+            // Images (KM or MI)
+            let bestImages = localStorage.getItem('best_images_min_dist');
+            if (bestImages) {
+                const val = isMetric ? bestImages : Math.round(bestImages * 0.621371);
+                document.getElementById('best-images').textContent = `${val} ${isMetric ? 'KM' : 'MI'}`;
+            } else {
+                document.getElementById('best-images').textContent = '---';
+            }
+
+            // Guesser (Just a number)
+            const bestGuesser = localStorage.getItem('best_guesser_min');
+            document.getElementById('best-guesser').textContent = bestGuesser ? bestGuesser : '---';
+        }
+
+        syncUI();
     </script>
 </body>
 

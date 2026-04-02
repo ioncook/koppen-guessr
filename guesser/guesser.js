@@ -3,7 +3,7 @@ let legendData = [];
 let targetCity = null;
 let guesses = 0;
 let gameOver = false;
-let currentUnits = localStorage.getItem('guesser_units') || 'metric';
+let currentUnits = localStorage.getItem('site_units') || 'metric';
 
 /**
  * Initialization
@@ -16,306 +16,308 @@ async function init() {
         ]);
         
         const rawCities = await citiesResp.json();
-        citiesData = rawCities.filter(c => c.zone > 0 && c.temp && c.temp.length >= 12 && c.precip && c.precip.length >= 12);
         legendData = await legendResp.json();
         
-        const candidates = rawCities.filter((c, i) => (i < 100 || c.capital === 'primary') && (c.temp && c.temp.length >= 12));
-        targetCity = candidates[Math.floor(Math.random() * candidates.length)];
-        
-        console.log("Target set: " + targetCity.city);
-        
+        // Data Fallback for Coastal Cities
+        citiesData = rawCities.filter(c => (c.population || 0) > 100000 && c.zone > 0).map(c => {
+            if (isDataZero(c)) {
+                const near = findNearestValid(c, rawCities);
+                if (near) {
+                    c.temp = near.temp;
+                    c.precip = near.precip;
+                }
+            }
+            return c;
+        });
+
+        // Pick Random target
+        const pool = citiesData.filter(c => (c.population || 0) > 600000);
+        targetCity = processCityData(pool[Math.floor(Math.random() * pool.length)]);
+        console.log("Target:", targetCity.name);
+
         setupSearch();
-        setupUnitUI();
-        
-        document.getElementById('play-again-btn').onclick = () => location.reload();
-    } catch (e) {
-        console.error(e);
-        alert("Error loading data.");
-    }
-}
+        syncUnits();
 
-/**
- * Unit Conversion Helpers
- */
-function convertTemp(c) {
-    if (currentUnits === 'metric') return { val: Math.round(c * 10) / 10, unit: "°C" };
-    return { val: Math.round((c * 9/5 + 32) * 10) / 10, unit: "°F" };
-}
-
-function convertPrecip(mm) {
-    if (currentUnits === 'metric') return { val: Math.round(mm), unit: "mm" };
-    return { val: Math.round((mm / 25.4) * 100) / 100, unit: "in" };
-}
-
-/**
- * Stat Calculation (Averages, Trends)
- */
-function calculateStats(city) {
-    const temps = city.temp || [];
-    const precips = city.precip || [];
-    const avgTemp = temps.reduce((a,b) => a+b, 0) / 12;
-    const totalPrecip = precips.reduce((a,b) => a+b, 0);
-    const zoneObj = legendData.find(l => l.id === city.zone);
-    const code = zoneObj ? zoneObj.code : "??";
-    const color = zoneObj ? zoneObj.color : "transparent";
-    
-    return {
-        name: city.city,
-        code: code,
-        zoneColor: color,
-        avgTemp: avgTemp,
-        totalPrecip: totalPrecip,
-        tempsRaw: temps,
-        precipsRaw: precips
-    };
-}
-
-/**
- * Main Logic: Submit Guess
- */
-let guessHistory = [];
-function submitGuess(guessCity) {
-    if (gameOver) return;
-    
-    guesses++;
-    document.getElementById('streak-value').textContent = guesses;
-    
-    guessHistory.push(guessCity);
-    renderRow(guessCity);
-    
-    if (guessCity.city === targetCity.city) handleWin();
-}
-
-function renderRow(guessCity) {
-    const g = calculateStats(guessCity);
-    const t = calculateStats(targetCity);
-    
-    const row = document.createElement('div');
-    row.className = 'result-row';
-    
-    // CITY NAME
-    row.appendChild(createColumn("CITY", g.name, g.name === t.name ? 'exact' : 'wrong'));
-    
-    // ZONE
-    let matchCount = 0;
-    const gCode = g.code;
-    const tCode = t.code;
-    for (let i = 0; i < Math.min(gCode.length, tCode.length); i++) {
-        if (gCode[i] === tCode[i]) matchCount++;
-    }
-    
-    let accuracyClass = 'wrong';
-    if (gCode === tCode) accuracyClass = 'exact';
-    else if (matchCount === 2) accuracyClass = 'partial2';
-    else if (matchCount === 1) accuracyClass = 'partial1';
-    
-    row.appendChild(createZoneColumn(g.code, accuracyClass, g.zoneColor));
-    
-    // ANNUAL PRECIP
-    row.appendChild(createNumericColumn("ANNUAL", g.totalPrecip, t.totalPrecip, 'precip'));
-    
-    // AVG TEMP
-    row.appendChild(createNumericColumn("AVG TEMP", g.avgTemp, t.avgTemp, 'temp'));
-    
-    // MINI CHART (Trends)
-    row.appendChild(createChartColumn(g, t));
-    
-    const container = document.getElementById('results-container');
-    container.prepend(row);
-}
-
-/**
- * UI Helpers: Columns
- */
-function createColumn(label, val, className) {
-    const div = document.createElement('div');
-    div.className = `column ${className}`;
-    div.innerHTML = `<span class="val">${val}</span><span class="label">${label}</span>`;
-    return div;
-}
-
-function createZoneColumn(code, accuracyClass, legendColor) {
-    const div = document.createElement('div');
-    div.className = `column ${accuracyClass}`;
-    div.innerHTML = `
-        <span class="val zone-field" style="background:${legendColor}; outline: 1px solid rgba(255,255,255,0.2);">${code}</span>
-        <span class="label">ZONE</span>
-    `;
-    return div;
-}
-
-/**
- * Numerical Accuracy Scaling
- * PRECIP: exact < 1mm | yellow < 2cm (20mm) | orange < 8cm (80mm)
- * TEMP: exact < 0.1C | yellow < 0.5C | orange < 2.0C
- */
-function createNumericColumn(label, val, targetVal, type) {
-    const div = document.createElement('div');
-    const displayVal = type === 'temp' ? convertTemp(val) : convertPrecip(val);
-    
-    let className = 'wrong';
-    let arrow = "";
-    
-    const diff = Math.abs(val - targetVal);
-    
-    if (val === targetVal || diff < 0.05) {
-        className = 'exact'; // Green
-    } else {
-        if (type === 'temp') {
-            if (diff <= 0.5) className = 'partial2'; // Yellow
-            else if (diff <= 2.0) className = 'partial1'; // Orange
-        } else {
-            if (diff <= 20) className = 'partial2'; // Yellow
-            else if (diff <= 80) className = 'partial1'; // Orange
-        }
-        arrow = val < targetVal ? "↑" : "↓";
-    }
-    
-    div.className = `column ${className}`;
-    div.innerHTML = `
-        <span class="val">${displayVal.val}${displayVal.unit}</span>
-        <span class="arrow">${arrow}</span>
-        <span class="label">${label}</span>
-    `;
-    return div;
-}
-
-/**
- * 2-Row Trend Chart (12 Months, now with Green/Yellow logic)
- */
-function createChartColumn(g, t) {
-    const col = document.createElement('div');
-    col.className = 'column chart-col';
-    
-    // TEMP Trend 
-    const tRow = document.createElement('div');
-    tRow.className = 'spark-row';
-    tRow.setAttribute('data-type', 'T');
-    
-    const maxT = Math.max(...g.tempsRaw, ...t.tempsRaw);
-    const minT = Math.min(...g.tempsRaw, ...t.tempsRaw);
-    const rangeT = maxT - minT || 1;
-    
-    g.tempsRaw.forEach((val, i) => {
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        const heightPercent = ((val - minT) / rangeT) * 100;
-        bar.style.height = `${Math.max(12, heightPercent)}%`;
-        bar.style.alignSelf = 'end';
-        
-        const diff = Math.abs(val - t.tempsRaw[i]);
-        if (diff < 0.2) bar.classList.add('exact'); 
-        else if (diff < 1.0) bar.classList.add('close'); 
-        else bar.classList.add('wrong'); 
-
-        if (diff > 0.1) {
-            const arrow = document.createElement('div');
-            arrow.className = 'bar-arrow';
-            arrow.textContent = val < t.tempsRaw[i] ? "↑" : "↓";
-            bar.appendChild(arrow);
-        }
-        tRow.appendChild(bar);
-    });
-    
-    // PRECIP Trend 
-    const pRow = document.createElement('div');
-    pRow.className = 'spark-row';
-    pRow.setAttribute('data-type', 'P');
-    
-    const maxP = Math.max(...g.precipsRaw, ...t.precipsRaw, 1);
-    
-    g.precipsRaw.forEach((val, i) => {
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.height = `${Math.max(8, (val / maxP) * 100)}%`;
-        bar.style.alignSelf = 'end';
-        
-        const diff = Math.abs(val - t.precipsRaw[i]);
-        if (diff < 0.05 * t.precipsRaw[i] || diff < 3) bar.classList.add('exact');
-        else if (diff < 0.15 * t.precipsRaw[i] || diff < 10) bar.classList.add('close');
-        else bar.classList.add('wrong');
-
-        if (diff > 1) {
-            const arrow = document.createElement('div');
-            arrow.className = 'bar-arrow';
-            arrow.textContent = val < t.precipsRaw[i] ? "↑" : "↓";
-            bar.appendChild(arrow);
-        }
-        pRow.appendChild(bar);
-    });
-    
-    col.appendChild(tRow);
-    col.appendChild(pRow);
-    col.innerHTML += `<span class="label">Trends</span>`;
-    return col;
-}
-
-/**
- * Unit Toggle Logic - with persistence
- */
-function setupUnitUI() {
-    const toggle = document.getElementById('unit-toggle');
-    const m = document.getElementById('unit-metric');
-    const imp = document.getElementById('unit-imperial');
-    
-    m.classList.toggle('active-unit', currentUnits === 'metric');
-    imp.classList.toggle('active-unit', currentUnits === 'imperial');
-
-    toggle.onclick = () => {
-        currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
-        localStorage.setItem('guesser_units', currentUnits);
-        m.classList.toggle('active-unit', currentUnits === 'metric');
-        imp.classList.toggle('active-unit', currentUnits === 'imperial');
-        
-        document.getElementById('results-container').innerHTML = "";
-        guessHistory.forEach(city => renderRow(city));
-    };
-}
-
-/**
- * Game Win Tracking - Min Guesses Logic
- */
-function handleWin() {
-    gameOver = true;
-    setTimeout(() => {
-        document.getElementById('game-over-overlay').classList.remove('hidden');
-        document.getElementById('modal-title').textContent = "Victory!";
-        document.getElementById('modal-info').textContent = `Correct city: ${targetCity.city}. Result after ${guesses} guesses.`;
-        
-        document.getElementById('view-guesses-btn').onclick = () => {
-            document.getElementById('game-over-overlay').classList.add('hidden');
+        // Unit Toggle
+        document.getElementById('unit-toggle-small').onclick = () => {
+            currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
+            localStorage.setItem('site_units', currentUnits);
+            syncUnits();
+            renderGuesses();
         };
 
-        const storedBest = localStorage.getItem('best_guesser_min');
-        if (!storedBest || guesses < parseInt(storedBest)) {
-            localStorage.setItem('best_guesser_min', guesses);
-        }
-    }, 400);
+    } catch (e) {
+        console.error("Guesser Init Error:", e);
+    }
 }
 
+function isDataZero(c) {
+    if (!c.temp || c.temp.length < 1) return true;
+    return c.temp.every(t => t === 0);
+}
+
+function findNearestValid(city, all) {
+    let best = null;
+    let minDist = Infinity;
+    const candidates = all.filter(c => (c.population || 0) > 300000 && !isDataZero(c)).slice(0, 1000);
+    for (const other of candidates) {
+        const d = Math.pow(city.lat - other.lat, 2) + Math.pow(city.lng - other.lng, 2);
+        if (d < minDist) { minDist = d; best = other; }
+    }
+    return best;
+}
+
+function processCityData(city) {
+    const l = legendData.find(leg => leg.id == city.zone) || { code: "??", color: "#333" };
+    return {
+        name: city.city,
+        country: city.country,
+        code: l.code,
+        color: l.color,
+        description: l.description,
+        zone: city.zone,
+        lat: city.lat,
+        lng: city.lng,
+        temps: city.temp,
+        precips: city.precip,
+        totalPrecip: city.precip.reduce((a, b) => a + b, 0),
+        avgTemp: city.temp.reduce((a, b) => a + b, 0) / 12
+    };
+}
+
+let sessionGuesses = [];
+
+function syncUnits() {
+    document.getElementById('unit-metric').classList.toggle('active', currentUnits === 'metric');
+    document.getElementById('unit-imperial').classList.toggle('active', currentUnits === 'imperial');
+}
+
+/**
+ * SEARCH & SUBMISSION
+ */
 function setupSearch() {
     const input = document.getElementById('guess-search');
-    const dropdown = document.getElementById('dropdown-options');
-    let lastFiltered = [];
+    const drop = document.getElementById('dropdown-options');
+    let filtered = [];
 
     input.oninput = () => {
         const q = input.value.toLowerCase().trim();
-        if (q.length < 2) { dropdown.classList.add('hidden'); return; }
-        lastFiltered = citiesData.filter(c => c.city.toLowerCase().startsWith(q) || c.country.toLowerCase().startsWith(q)).slice(0, 15);
-        dropdown.innerHTML = "";
-        lastFiltered.forEach(c => {
-            const d = document.createElement('div');
-            d.className = 'option';
-            d.textContent = `${c.city}, ${c.country}`;
-            d.onclick = () => { input.value = ""; dropdown.classList.add('hidden'); submitGuess(c); };
-            dropdown.appendChild(d);
+        if (q.length < 2) { drop.classList.add('hidden'); return; }
+        
+        filtered = citiesData.filter(c => 
+            c.city.toLowerCase().includes(q) || 
+            c.country.toLowerCase().includes(q)
+        ).slice(0, 10);
+
+        drop.innerHTML = "";
+        filtered.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            
+            // SINGLE TEXT NODE - ZERO HTML WHITESPACE
+            const label = `${c.city.replace(/[\s\u00A0]+/g, ' ').trim()}, ${c.country.replace(/[\s\u00A0]+/g, ' ').trim()}`;
+            div.textContent = label;
+
+            div.onclick = () => { submitGuess(c); input.value = ""; drop.classList.add('hidden'); };
+            drop.appendChild(div);
         });
-        dropdown.classList.remove('hidden');
+        drop.classList.remove('hidden');
     };
-    
+
     input.onkeydown = (e) => {
-        if (e.key === 'Enter' && lastFiltered.length > 0) { submitGuess(lastFiltered[0]); input.value = ""; dropdown.classList.add('hidden'); }
+        if (e.key === 'Enter' && filtered.length > 0) {
+            submitGuess(filtered[0]);
+            input.value = "";
+            drop.classList.add('hidden');
+        }
     };
+}
+
+/**
+ * GAME LOGIC
+ */
+function submitGuess(rawCity) {
+    if (gameOver) return;
+    guesses++;
+    document.getElementById('streak-value').textContent = guesses;
+
+    const g = processCityData(rawCity);
+    sessionGuesses.unshift(g);
+    renderGuesses();
+
+    if (g.name === targetCity.name) {
+        endGame();
+    }
+}
+
+function renderGuesses() {
+    const container = document.getElementById('results-container');
+    container.innerHTML = "";
+    sessionGuesses.forEach(g => {
+        const row = document.createElement('div');
+        row.className = 'result-row';
+
+        // 1. City Name
+        const nameCol = document.createElement('div');
+        nameCol.className = 'column';
+        nameCol.innerHTML = `<span class="val">${g.name}</span><span class="label">${g.country}</span>`;
+        row.appendChild(nameCol);
+
+        // 2. Zone
+        const zoneCol = document.createElement('div');
+        const matchCount = getZoneMatch(g.code, targetCity.code);
+        let accuracy = 'wrong';
+        if (g.zone == targetCity.zone) accuracy = 'exact';
+        else if (matchCount === 2) accuracy = 'close';
+        else if (matchCount === 1) accuracy = 'close'; 
+        
+        zoneCol.className = `column ${accuracy}`;
+        zoneCol.innerHTML = `<span class="zone-field" style="background:${g.color}">${g.code}</span><span class="label">ZONE</span>`;
+        row.appendChild(zoneCol);
+
+        // 3. Precip
+        row.appendChild(createNumericCol("ANNUAL", g.totalPrecip, targetCity.totalPrecip, "precip"));
+
+        // 4. Temp
+        row.appendChild(createNumericCol("AVG TEMP", g.avgTemp, targetCity.avgTemp, "temp"));
+
+        // 5. Charts
+        row.appendChild(createChartsCol(g, targetCity));
+
+        container.appendChild(row);
+    });
+}
+
+function getZoneMatch(g, t) {
+    if (g[0] === t[0] && g[1] === t[1]) return 2;
+    if (g[0] === t[0]) return 1;
+    return 0;
+}
+
+function createNumericCol(label, gVal, tVal, type) {
+    const col = document.createElement('div');
+    const diff = Math.abs(gVal - tVal);
+    let accuracy = "wrong";
+    
+    if (type === "precip") {
+        if (diff < 50) accuracy = "exact";
+        else if (diff < 200) accuracy = "close";
+    } else {
+        if (diff < 0.5) accuracy = "exact";
+        else if (diff < 2) accuracy = "close";
+    }
+
+    col.className = `column ${accuracy}`;
+    let displayVal = Math.round(gVal);
+    let unit = type === "precip" ? "mm" : "°C";
+
+    if (currentUnits === "imperial") {
+        if (type === "precip") {
+            displayVal = Math.round(gVal * 0.0393701);
+            unit = "in";
+        } else {
+            displayVal = Math.round((gVal * 9/5) + 32);
+            unit = "°F";
+        }
+    }
+
+    const arrow = gVal < tVal ? "↑" : (gVal > tVal ? "↓" : "");
+    col.innerHTML = `<span class="val">${displayVal}${unit}</span><span style="font-size:0.8rem">${arrow}</span><span class="label">${label}</span>`;
+    return col;
+}
+
+function createChartsCol(g, t) {
+    const col = document.createElement('div');
+    col.className = 'column chart-col';
+    
+    // Temp Spark
+    const tRow = document.createElement('div');
+    tRow.className = "spark-row";
+    tRow.setAttribute('data-type', 'T');
+    
+    const maxT = Math.max(...g.temps, ...t.temps);
+    const minT = Math.min(...g.temps, ...t.temps);
+    const rangeT = maxT - minT || 1;
+
+    g.temps.forEach((v, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const h = ((v - minT) / rangeT) * 100;
+        bar.style.height = `${Math.max(10, h)}%`;
+        bar.style.alignSelf = "end";
+        
+        const diff = Math.abs(v - t.temps[i]);
+        if (diff < 1) bar.style.background = "#388e3c";
+        else if (diff < 3) bar.style.background = "#fbc02d";
+        
+        if (diff > 0.5) {
+            const arr = document.createElement('span');
+            arr.className = "bar-arrow";
+            arr.textContent = v < t.temps[i] ? "↑" : "↓";
+            bar.appendChild(arr);
+        }
+        tRow.appendChild(bar);
+    });
+
+    // Precip Spark
+    const pRow = document.createElement('div');
+    pRow.className = "spark-row";
+    pRow.setAttribute('data-type', 'P');
+    
+    const maxP = Math.max(...g.precips, ...t.precips);
+    const rangeP = maxP || 1;
+
+    g.precips.forEach((v, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const h = (v / rangeP) * 100;
+        bar.style.height = `${Math.max(10, h)}%`;
+        bar.style.alignSelf = "end";
+        
+        const diff = Math.abs(v - t.precips[i]);
+        if (diff < 10) bar.style.background = "#388e3c";
+        else if (diff < 40) bar.style.background = "#fbc02d";
+        
+        if (diff > 5) {
+            const arr = document.createElement('span');
+            arr.className = "bar-arrow";
+            arr.textContent = v < t.precips[i] ? "↑" : "↓";
+            bar.appendChild(arr);
+        }
+        pRow.appendChild(bar);
+    });
+
+    col.appendChild(tRow);
+    col.appendChild(pRow);
+    return col;
+}
+
+function endGame() {
+    gameOver = true;
+    const overlay = document.getElementById('game-over-overlay');
+    const content = document.getElementById('modal-content');
+    
+    const bestKey = 'best_guesser_min';
+    const currentBest = localStorage.getItem(bestKey);
+    if (!currentBest || guesses < parseInt(currentBest)) {
+        localStorage.setItem(bestKey, guesses);
+    }
+
+    content.innerHTML = `
+        <div style="background:#050505; border:1px solid #1a1a1a; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
+            <div style="color:var(--text-secondary); font-size: 0.6rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">TARGET CITY</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: #fff;">${targetCity.name}</div>
+            <div style="color:var(--text-secondary); margin-bottom: 15px;">${targetCity.country}</div>
+            
+            <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
+                <span class="climate-pill" style="background:${targetCity.color}">${targetCity.code}</span>
+                <span style="font-weight:700; color:#fff">${targetCity.description}</span>
+            </div>
+        </div>
+        <div style="color:var(--text-secondary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">SOLVED IN ${guesses} GUESSES</div>
+    `;
+
+    overlay.classList.remove('hidden');
 }
 
 init();

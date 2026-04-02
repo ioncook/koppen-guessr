@@ -1,14 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Köppen-Guessr | Images Mode</title>
+    <title>KöppenGuessr | Images</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="../streaks/streaks.css">
-    <link rel="stylesheet" href="images.css">
-</head>
+    <style>
+        .home-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+        .home-link:hover { color: var(--accent-color); }
 
+        #image-container {
+            width: 100%;
+            height: 50vh;
+            background-color: #000;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        #load-curtain {
+            position: absolute;
+            inset: 0;
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            z-index: 10;
+        }
+        #load-curtain.hidden { display: none; }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #222;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #guess-input-container {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        #legend-search {
+            width: 100%;
+            background: var(--button-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        #dropdown {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        #dropdown.hidden { display: none; }
+        .option { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .option:hover { background: #1a1a1a; }
+
+        #feedback-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #feedback-overlay.hidden { display: none; }
+
+        #modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .climate-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 800;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .unit-toggle-small {
+            display: flex;
+            gap: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .unit-toggle-small .active { color: var(--accent-color); }
+
+        #stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
 <body>
     <div id="game-container">
         <header>
@@ -17,42 +150,47 @@
                 <h1 style="margin-left: 20px;">Images</h1>
             </div>
             <div id="stats">
-                <span id="streak-label">SESSION SCORE</span>
-                <span id="streak-total">0</span>
-                <span id="round-indicator" style="margin-top: 5px; color: #555; font-size: 0.7rem; font-weight: bold;">ROUND 1/5</span>
+                <span id="streak-label">ROUND DISTANCE</span>
+                <span id="session-score">0 KM</span>
             </div>
         </header>
 
         <main>
-            <div id="mly-container" class="card">
-                <div id="mly-overlay" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Finding climate imagery...</p>
+            <div class="card">
+                <div id="image-container">
+                    <div id="load-curtain">
+                        <div class="spinner"></div>
+                        <p style="color:var(--text-secondary); font-size: 0.8rem;">Retrieving location imagery...</p>
+                    </div>
                 </div>
-            </div>
 
-            <div id="guess-input-container">
-                <input type="text" id="guess-search" placeholder="Search climate (Af, Cfb, Desert)..."
-                    autocomplete="off">
-                <div id="dropdown-options" class="hidden"></div>
+                <p style="color:var(--text-secondary); font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Identify the Climate</p>
+                
+                <div id="guess-input-container">
+                    <input type="text" id="legend-search" placeholder="Search climate zone (e.g. Af, Desert, Tundra)..." autocomplete="off">
+                    <div id="dropdown" class="hidden"></div>
+                </div>
+
+                <div id="stats-row">
+                    <span id="round-indicator" style="font-size:0.7rem; font-weight:800; color:var(--text-secondary);">ROUND 1/5</span>
+                    <div id="unit-toggle" class="unit-toggle-small">
+                        <span id="unit-metric" class="active">METRIC</span>
+                        <span style="color:#222">|</span>
+                        <span id="unit-imperial">IMPERIAL</span>
+                    </div>
+                </div>
             </div>
         </main>
 
-        <!-- Round End Modal Overlay -->
-        <div id="modal-overlay">
-            <div id="feedback-modal">
-                <div id="feedback-modal-message">Correct!</div>
-                <div id="feedback-modal-details">...</div>
-                <button id="next-btn" class="modal-btn">Next Round</button>
+        <div id="feedback-overlay" class="hidden">
+            <div id="modal">
+                <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 20px;"></h2>
+                <div id="modal-details" style="margin-bottom: 30px;"></div>
+                <button id="modal-btn" class="modal-btn" style="width:100%; background:var(--button-bg); border:1px solid var(--border-color); color:var(--text-color); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">Continue</button>
             </div>
         </div>
-
-        <footer>
-            <p>Data: worldcities & Mapillary | Styled by Antigravity</p>
-        </footer>
     </div>
 
     <script src="images.js"></script>
 </body>
-
 </html>
