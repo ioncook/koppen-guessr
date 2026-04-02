@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Köppen-Guessr | Data Guesser</title>
+    <link rel="stylesheet" href="../streaks/streaks.css">
+    <link rel="stylesheet" href="guesser.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div style="display:flex; align-items:center;">
+                <a href="../index.html" class="home-link">← Home</a>
+                <h1 style="margin-left: 20px;">Data Guesser</h1>
+            </div>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <!-- Unit Toggle -->
+                <div id="unit-toggle" class="card" style="padding: 5px 10px; margin: 0; display: flex; gap: 10px; font-size: 0.8rem; cursor: pointer; user-select: none;">
+                    <span id="unit-metric" class="active-unit">Metric</span>
+                    <span style="color:#333">|</span>
+                    <span id="unit-imperial">Imperial</span>
+                </div>
+                <div id="stats">
+                    <span id="streak-label">GUESSES</span>
+                    <span id="streak-value">0</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="search-card">
+                <div id="guess-input-container">
+                    <input type="text" id="guess-search" placeholder="Guess a city..." autocomplete="off">
+                    <div id="dropdown-options" class="hidden"></div>
+                </div>
+            </div>
+
+            <div id="results-container">
+                <!-- Result rows appear here -->
+            </div>
+        </main>
+
+        <div id="game-over-overlay" class="hidden">
+            <div class="modal-card">
+                <h2 id="modal-title">Victory!</h2>
+                <p id="modal-info"></p>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                    <button id="play-again-btn" style="margin-top: 0;">Play Again</button>
+                    <button id="view-guesses-btn" class="modal-btn" style="background:transparent; border: 1px solid #333; color: #888;">Review My Guesses</button>
+                    <a href="../index.html" class="home-link" style="margin-top: 10px; opacity: 0.5;">Return Home</a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Data Guesser | Identify the city by its climate stats</p>
+        </footer>
+    </div>
+    <script src="guesser.js"></script>
+</body>
+</html>

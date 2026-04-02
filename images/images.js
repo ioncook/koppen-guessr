@@ -42,9 +42,8 @@ async function init() {
         
         setupSearch();
         loadNewLocation();
-        setupInteraction();
     } catch (e) {
-        console.error(e);
+        console.error("Initialization error", e);
         alert("Error loading data.");
     }
 }
@@ -60,8 +59,11 @@ async function loadNewLocation() {
 
     modalOverlay.classList.remove('active');
     roundIndicator.textContent = `ROUND ${currentRound}/${maxRounds}`;
+    
+    // Clear the current image immediately to show pure black background
+    mlyContainer.style.backgroundImage = 'none';
     mlyOverlay.classList.remove('hidden');
-    mlyOverlay.innerHTML = '<div class="spinner"></div><p>Finding climate imagery...</p>';
+    mlyOverlay.innerHTML = '<div class="spinner"></div><p>Searching for climate imagery...</p>';
     
     let imageUrl = null;
     let attempts = 0;
@@ -78,26 +80,21 @@ async function loadNewLocation() {
             const mData = await mResp.json();
             if (mData.data && mData.data.length > 0) {
                 const imgId = mData.data[0].id;
-                const imgResp = await fetch(`https://graph.mapillary.com/${imgId}?fields=thumb_2048_url&access_token=${mlyToken}`);
+                const imgResp = await fetch(`https://graph.mapillary.com/${imgId}?fields=thumb_1024_url&access_token=${mlyToken}`);
                 const imgData = await imgResp.json();
-                imageUrl = imgData.thumb_2048_url;
+                imageUrl = imgData.thumb_1024_url;
             }
         } catch (e) {
-            console.error("Mapillary error", e);
+            console.warn("Mapillary error", e);
             break;
         }
     }
 
     if (imageUrl) {
         mlyContainer.style.backgroundImage = `url(${imageUrl})`;
-        mlyContainer.style.backgroundSize = "contain";
-        mlyContainer.style.backgroundPosition = "center";
-        mlyContainer.style.backgroundRepeat = "no-repeat";
-        
-        resetTransform();
         mlyOverlay.classList.add('hidden');
     } else {
-        mlyOverlay.innerHTML = "<p>Search failed. Check token or try again.</p>";
+        mlyOverlay.innerHTML = "<p>Search failed. Try another city.</p>";
     }
 
     searchInput.value = "";
@@ -122,65 +119,6 @@ function showSummary() {
     `;
     nextBtn.textContent = "Play Again";
     nextBtn.onclick = () => location.reload();
-}
-
-/**
- * Interaction Logic (Pan/Zoom)
- */
-let scale = 100;
-let posX = 50;
-let posY = 50;
-
-function setupInteraction() {
-    let isDragging = false;
-    let lastX, lastY;
-
-    mlyContainer.onmousedown = (e) => {
-        isDragging = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        mlyContainer.style.cursor = 'grabbing';
-        e.preventDefault();
-    };
-
-    window.onmousemove = (e) => {
-        if (!isDragging || scale <= 100) return;
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        posX -= (dx / mlyContainer.offsetWidth) * 100;
-        posY -= (dy / mlyContainer.offsetHeight) * 100;
-        posX = Math.max(0, Math.min(100, posX));
-        posY = Math.max(0, Math.min(100, posY));
-        lastX = e.clientX;
-        lastY = e.clientY;
-        updateView();
-    };
-
-    window.onmouseup = () => {
-        isDragging = false;
-        mlyContainer.style.cursor = 'grab';
-    };
-
-    mlyContainer.onwheel = (e) => {
-        e.preventDefault();
-        const factor = 15;
-        if (e.deltaY < 0) scale += factor;
-        else scale = Math.max(100, scale - factor);
-        if (scale === 100) { posX = 50; posY = 50; }
-        updateView();
-    }, { passive: false };
-}
-
-function updateView() {
-    mlyContainer.style.backgroundSize = `${scale}%`;
-    mlyContainer.style.backgroundPosition = `${posX}% ${posY}%`;
-}
-
-function resetTransform() {
-    scale = 100;
-    posX = 50;
-    posY = 50;
-    updateView();
 }
 
 /**
@@ -291,9 +229,8 @@ function submitGuess(guess) {
     modalDetails.innerHTML = `
         <div style="margin: 15px 0;">
             Location: <span style="color:white; font-weight:bold;">${currentCity.city}, ${currentCity.country}</span><br>
-            Climate: <span style="color:white; font-weight:bold;">${actualStr}</span>
-        </div>
-        <p style="font-size: 0.8rem; margin-top: 20px;">Press Enter for Next Round</p>
+            <button onclick="location.reload()">Play Again</button>
+            <a href="../index.html" style="margin-top: 20px; color: #888; text-decoration: none;">Return Home</a>
     `;
     
     if (currentRound === maxRounds) {

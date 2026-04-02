@@ -4,7 +4,6 @@
     overflow: hidden;
     position: relative;
     background: #000;
-    cursor: grab;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -66,22 +65,4 @@ header h1 {
     margin-bottom: 30px;
 }
 
-.modal-btn {
-    background: #ababab;
-    color: black;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.modal-btn:hover {
-    transform: scale(1.05);
-}
-
-.modal-btn:active {
-    transform: scale(0.95);
-}
+/* Modal Overrides */

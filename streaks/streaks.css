@@ -237,19 +237,25 @@ header h1 {
 button {
     background: var(--button-bg);
     color: white;
-    border: 1px solid #444;
+    border: 1px solid #333;
     padding: 12px 30px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 30px; /* Pill shape for premium feel */
     cursor: pointer;
     font-family: inherit;
-    transition: transform 0.2s, background 0.2s;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
 }
 
 button:hover {
+    background: #333;
+    border-color: #555;
     transform: translateY(-2px);
-    background: #3a3a3a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 button:active {

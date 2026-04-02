@@ -167,12 +167,13 @@
             <div class="best-score">Personal Best: <strong id="best-images">0</strong></div>
         </a>
 
-        <div class="mode-card disabled">
-            <span class="badge">COMING SOON</span>
+        <a href="guesser/guesser.html" class="mode-card">
+            <span class="badge">NEW</span>
             <div class="mode-icon">🔭</div>
-            <div class="mode-title">Data Duel</div>
-            <div class="mode-desc">Analyze raw temperature and precipitation data to distinguish between similar biomes.</div>
-        </div>
+            <div class="mode-title">Data Guesser</div>
+            <div class="mode-desc">Guess the city by analyzing its raw climate data. Compare attributes like monthly temperature and precipitation to find the answer.</div>
+            <div class="best-score">Personal Best: <strong id="best-guesser">---</strong> guesses</div>
+        </a>
     </div>
 
     <footer>
@@ -183,6 +184,10 @@
         // Load persist scores from localStorage
         document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
         document.getElementById('best-images').textContent = localStorage.getItem('best_images') || 0;
+        
+        // Data Guesser: Show minimum guesses (lower is better, if solved)
+        const bestGuesser = localStorage.getItem('best_guesser_min');
+        document.getElementById('best-guesser').textContent = bestGuesser ? bestGuesser : '---';
     </script>
 </body>
 
