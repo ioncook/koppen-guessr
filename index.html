@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Köppen-Guessr | Climate Master</title>
-    <link rel="stylesheet" href="streaks/streaks.css">
     <style>
         :root {
             --bg-color: #0f0f0f;
@@ -15,8 +14,14 @@
             --text-secondary: #888888;
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Outfit', system-ui, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -24,14 +29,12 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
-            padding: 40px;
+            padding: 20px;
         }
 
         .hero {
             text-align: center;
             margin-bottom: 60px;
-            animation: fadeIn 1s ease-out;
         }
 
         .hero h1 {
@@ -46,30 +49,31 @@
 
         .hero p {
             color: var(--text-secondary);
-            font-size: 1.25rem;
+            font-size: 1.2rem;
+            font-weight: 300;
         }
 
         .modes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
         }
 
         .mode-card {
             background: var(--card-bg);
-            border: 1px solid #333;
+            border: 1px solid #2a2a2a;
             border-radius: 20px;
             padding: 40px;
             text-decoration: none;
             color: inherit;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            position: relative;
-            overflow: hidden;
         }
 
         .mode-card:hover {
@@ -81,39 +85,61 @@
         .mode-card.disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        .badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(171, 171, 171, 0.1);
+            color: var(--accent-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border: 1px solid rgba(171, 171, 171, 0.2);
+        }
+
+        .best-score {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: auto;
+            border-top: 1px solid #222;
+            padding-top: 15px;
+        }
+
+        .best-score strong {
+            color: var(--accent-color);
         }
 
         .mode-icon {
             font-size: 2.5rem;
+            margin-bottom: 5px;
         }
 
         .mode-title {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .mode-desc {
-            font-size: 0.9rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
-        .badge {
-            background: var(--accent-color);
-            color: white;
-            font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-weight: 800;
+        footer {
+            margin-top: 60px;
+            color: #333;
+            font-size: 0.8rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 3rem; }
+            .modes-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -121,7 +147,7 @@
 <body>
     <div class="hero">
         <h1>KöppenGuessr</h1>
-        <p>A climate classification guessing game.</p>
+        <p>Master the world's climate zones, one location at a time.</p>
     </div>
 
     <div class="modes-grid">
@@ -130,26 +156,34 @@
             <div class="mode-icon">🔥</div>
             <div class="mode-title">Streaks</div>
             <div class="mode-desc">Guess correctly to stay alive. How many global climates can you identify in a row?</div>
+            <div class="best-score">Personal Best: <strong id="best-streaks">0</strong></div>
         </a>
 
-        <a href="mapillary/mapillary.html" class="mode-card">
+        <a href="images/images.html" class="mode-card">
             <span class="badge">ACTIVE</span>
             <div class="mode-icon">🖼️</div>
             <div class="mode-title">Images</div>
             <div class="mode-desc">Identify the climate zone from street-level imagery. Scores are based on classification accuracy.</div>
+            <div class="best-score">Personal Best: <strong id="best-images">0</strong></div>
         </a>
 
         <div class="mode-card disabled">
             <span class="badge">COMING SOON</span>
-            <div class="mode-icon">📊</div>
+            <div class="mode-icon">🔭</div>
             <div class="mode-title">Data Duel</div>
-            <div class="mode-desc">Multiplayer climate analysis. Compare temperature and precip records to win.</div>
+            <div class="mode-desc">Analyze raw temperature and precipitation data to distinguish between similar biomes.</div>
         </div>
     </div>
 
-    <footer style="margin-top: 80px; opacity: 0.5; font-size: 0.8rem;">
-        &copy; 2026 KöppenGuessr. Built with world-class climate data.
+    <footer>
+        &copy; 2026 KöppenGuessr. Built with climate precision.
     </footer>
+
+    <script>
+        // Load persist scores from localStorage
+        document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
+        document.getElementById('best-images').textContent = localStorage.getItem('best_images') || 0;
+    </script>
 </body>
 
 </html>

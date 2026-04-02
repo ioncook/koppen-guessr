@@ -160,6 +160,11 @@ function submitGuess(guess) {
     } else {
         feedback.className = "wrong";
         feedbackMsg.textContent = `Wrong! Streak ended at ${streak}.`;
+        
+        // Save best score
+        const best = parseInt(localStorage.getItem('best_streaks') || 0);
+        if (streak > best) localStorage.setItem('best_streaks', streak);
+        
         streak = 0;
         const correctInfo = correctZone ? `${correctZone.code} (${correctZone.description})` : "Unknown";
         feedbackDetails.textContent = `The correct climate for ${currentCity.city} is ${correctInfo}.`;

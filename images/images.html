@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Köppen-Guessr | Images Mode</title>
+    <link rel="stylesheet" href="../streaks/streaks.css">
+    <link rel="stylesheet" href="images.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <header>
+            <div style="display:flex; align-items:center;">
+                <a href="../index.html" class="home-link">← Home</a>
+                <h1>Images</h1>
+            </div>
+            <div id="stats">
+                <span id="streak-label">SESSION SCORE</span>
+                <span id="streak-total">0</span>
+                <span id="round-indicator" style="margin-top: 5px; color: #555; font-size: 0.7rem; font-weight: bold;">ROUND 1/5</span>
+            </div>
+        </header>
+
+        <main>
+            <div id="mly-container" class="card">
+                <div id="mly-overlay" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Finding climate imagery...</p>
+                </div>
+            </div>
+
+            <div id="guess-input-container">
+                <input type="text" id="guess-search" placeholder="Search climate (Af, Cfb, Desert)..."
+                    autocomplete="off">
+                <div id="dropdown-options" class="hidden"></div>
+            </div>
+        </main>
+
+        <!-- Round End Modal Overlay -->
+        <div id="modal-overlay">
+            <div id="feedback-modal">
+                <div id="feedback-modal-message">Correct!</div>
+                <div id="feedback-modal-details">...</div>
+                <button id="next-btn" class="modal-btn">Next Round</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Data: worldcities & Mapillary | Styled by Antigravity</p>
+        </footer>
+    </div>
+
+    <script src="images.js"></script>
+</body>
+
+</html>
