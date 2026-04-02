@@ -5,10 +5,9 @@
     --accent-color: #ababab;
     --text-color: #e0e0e0;
     --text-secondary: #777777;
-    --button-bg: #222222;
+    --button-bg: #222222; /* Matching eupoliticalcompass dark grey style */
     --success-color: #388e3c;
     --error-color: #d32f2f;
-    --inter-font: 'Inter', sans-serif;
 }
 
 * {
@@ -18,14 +17,14 @@
 }
 
 body {
-    font-family: var(--inter-font);
+    font-family: system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
-    padding: 10px;
+    padding: 8px 10px 20px 10px;
 }
 
 #game-container {
@@ -33,20 +32,19 @@ body {
     max-width: 600px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 5px;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
 }
 
 header h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent-color);
     letter-spacing: -1px;
 }
 
@@ -61,45 +59,47 @@ header h1 {
 }
 
 #streak-label {
-    font-size: 0.6rem;
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 700;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 #streak-value {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
 }
 
 .card {
     background: var(--card-bg);
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 30px 30px 8px 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+#city-info {
+    margin-bottom: 40px;
 }
 
 #city-name {
     font-size: 2.2rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 5px;
-    letter-spacing: -1px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    letter-spacing: -0.5px;
 }
 
-#admin-country {
-    font-size: 1.1rem;
+#country-info {
+    font-size: 1.2rem;
     color: var(--text-secondary);
-    font-weight: 700;
+    font-weight: 400;
 }
 
 #flag-emoji {
-    font-size: 1.3rem;
-    margin-right: 8px;
-    vertical-align: middle;
+    font-size: 2rem;
+    margin-right: 15px;
 }
 
 /* SEARCH & INPUTS */
@@ -136,6 +136,8 @@ input[type="text"]:focus {
     border-radius: 8px;
     max-height: 250px;
     overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     z-index: 1000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }

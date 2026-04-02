@@ -114,7 +114,11 @@ function setupSearch() {
 
     input.oninput = () => {
         const q = input.value.toLowerCase().trim();
-        if (q.length < 2) { drop.classList.add('hidden'); return; }
+        if (q.length < 2) { 
+            filtered = []; // CLEAR RESULTS
+            drop.classList.add('hidden'); 
+            return; 
+        }
         
         filtered = citiesData.filter(c => 
             c.city.toLowerCase().includes(q) || 
@@ -141,9 +145,10 @@ function setupSearch() {
     };
 
     input.onkeydown = (e) => {
-        if (e.key === 'Enter' && filtered.length > 0) {
+        if (e.key === 'Enter' && filtered.length > 0 && !drop.classList.contains('hidden')) {
             submitGuess(filtered[0]);
             input.value = "";
+            filtered = []; // CLEAR
             drop.classList.add('hidden');
         }
     };

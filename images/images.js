@@ -7,6 +7,7 @@ let sessionScore = 0;
 let gameOver = false;
 let roundId = 0; 
 let sessionHistory = []; 
+let filteredPool = []; // For search synchronization
 
 // Global Unit Preference
 let currentUnits = localStorage.getItem('site_units') || 'metric';
@@ -19,7 +20,6 @@ function getContrastColor(hex) {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
-    // HSP color model brightness calculation
     const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
     return hsp > 127.5 ? "#000" : "#fff";
 }
@@ -52,14 +52,16 @@ async function start() {
         syncUnitUI();
 
         const handleNext = () => {
-            if (gameOver) {
-                location.reload();
-            } else if (currentRound < maxRounds) {
+            if (gameOver) return; // Prevent double execution mapping to location.reload()
+            
+            const overlay = document.getElementById('feedback-overlay');
+            if (currentRound < maxRounds) {
                 currentRound++;
-                document.getElementById('feedback-overlay').classList.add('hidden');
+                overlay.classList.add('hidden');
                 loadRound();
             } else {
                 gameOver = true;
+                overlay.classList.remove('hidden');
                 showFinalResults();
             }
         };
@@ -73,6 +75,7 @@ async function start() {
                 if (!overlay.classList.contains('hidden')) {
                     handleNext();
                     e.preventDefault();
+                    e.stopPropagation();
                 }
             }
         });
@@ -84,9 +87,7 @@ async function start() {
             updateScoreDisplay();
         };
 
-    } catch (e) {
-        console.error("Critical System Failure:", e);
-    }
+    } catch (e) { console.error("Crash:", e); }
 }
 
 function syncUnitUI() {
@@ -95,7 +96,7 @@ function syncUnitUI() {
 }
 
 function updateScoreDisplay() {
-    const displayDist = currentUnits === 'metric' ? sessionScore : Math.round(sessionScore * 0.621371);
+    const displayDist = Math.round(currentUnits === 'metric' ? sessionScore : sessionScore * 0.621371);
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
     document.getElementById('session-score').textContent = `${displayDist} ${unitLabel}`;
 }
@@ -108,7 +109,7 @@ function isDataDead(c) {
 function findNearestValid(city, all) {
     let best = null;
     let minDist = Infinity;
-    const pool = all.filter(c => (c.population || 0) > 300000 && !isDataDead(c)).slice(0, 1000);
+    const pool = all.filter(c => (c.population || 0) > 300000 && !isDataDead(c)).slice(0, 500);
     for (const other of pool) {
         const d = Math.pow(city.lat - other.lat, 2) + Math.pow(city.lng - other.lng, 2);
         if (d < minDist) { minDist = d; best = other; }
@@ -122,7 +123,6 @@ function findNearestValid(city, all) {
 async function loadRound() {
     const loader = document.getElementById('load-curtain');
     const container = document.getElementById('image-container');
-    
     loader.classList.remove('hidden');
     container.style.backgroundImage = 'none';
 
@@ -153,15 +153,9 @@ async function loadRound() {
                 if (fPid !== "-1") imgUrl = (fData.query.pages[fPid].original) ? fData.query.pages[fPid].original.source : (fData.query.pages[fPid].thumbnail ? fData.query.pages[fPid].thumbnail.source : null);
             }
 
-            // FILTER: Block Mosaics, Maps, and Night images
-            const badTerms = [
-                'montage', 'mosaic', 'collage', 'gallery', 'collection', 
-                'night', 'at_night', 'blue_hour', 'midnight', 'evening',
-                'map', 'locator', 'location', 'district', 'region', 'scheme', 'diagram'
-            ];
-            if (imgUrl && badTerms.some(term => imgUrl.toLowerCase().includes(term))) {
-                imgUrl = null;
-            }
+            // STRICTOR BLACKLIST
+            const badTerms = ['montage', 'mosaic', 'collage', 'gallery', 'collection', 'night', 'at_night', 'blue_hour', 'midnight', 'evening', 'map', 'locator', 'location', 'district', 'region', 'scheme', 'diagram'];
+            if (imgUrl && badTerms.some(term => imgUrl.toLowerCase().includes(term))) imgUrl = null;
 
             if (imgUrl && thisRoundId === roundId) {
                 await new Promise((resolve) => {
@@ -182,7 +176,7 @@ async function loadRound() {
                     testImg.onerror = () => resolve();
                 });
             }
-        } catch (e) { console.warn("Retrying imagery..."); }
+        } catch (e) {}
     }
 }
 
@@ -190,12 +184,10 @@ async function loadRound() {
  * GEOGRAPHIC SCORING
  */
 function getDist(lat1, lon1, lat2, lon2) {
-    const R = 6371; // km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -205,41 +197,39 @@ function findNearestWithZoneResult(zoneId, targetLat, targetLon) {
     for (const city of citiesData) {
         if (city.zone == zoneId) {
             const d = getDist(targetLat, targetLon, city.lat, city.lng);
-            if (d < nearestDist) {
-                nearestDist = d;
-                nearestCity = city;
-            }
+            if (d < nearestDist) { nearestDist = d; nearestCity = city; }
         }
     }
     return { dist: (nearestDist === Infinity ? 0 : nearestDist), city: nearestCity };
 }
 
 /**
- * SUBMIT & SCORING
+ * SUBMIT guess
  */
 function submitGuess(zone) {
     if (gameOver) return;
-    document.getElementById('legend-search').blur();
+    filteredPool = []; // CLEAR SEARCH
+    const input = document.getElementById('legend-search');
+    input.blur();
     
     const isCorrect = (zone.id == currentCity.zone);
     const result = isCorrect ? { dist: 0, city: currentCity } : findNearestWithZoneResult(zone.id, currentCity.lat, currentCity.lng);
-    const roundDist = result.dist;
+    const roundDist = Math.round(result.dist);
     const refCity = result.city;
     
-    sessionScore += Math.round(roundDist);
+    sessionScore += roundDist;
     updateScoreDisplay();
 
     const actual = legendData.find(l => l.id == currentCity.zone);
-    const actualStr = actual ? actual.description : "Unclassified";
+    const actualStr = actual ? actual.description : "Unknown";
     const actualColor = actual ? actual.color : "#333";
     const actualCode = actual ? actual.code : "??";
     const actualContrast = getContrastColor(actualColor);
 
-    // Track round history with reference city
     sessionHistory.push({
         city: currentCity.city.trim(),
         country: currentCity.country.trim(),
-        dist: Math.round(roundDist),
+        dist: roundDist,
         zoneCode: actualCode,
         zoneColor: actualColor,
         zoneContrast: actualContrast, 
@@ -252,19 +242,16 @@ function submitGuess(zone) {
     });
 
     const titleEl = document.getElementById('modal-title');
-    titleEl.textContent = isCorrect ? "Perfect Catch!" : "Geographic Deviation";
+    titleEl.textContent = isCorrect ? "Correct!" : "Deviation Detected";
     titleEl.style.color = isCorrect ? "#388e3c" : "#d32f2f";
     
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
-    const distToDisplay = currentUnits === 'metric' ? Math.round(roundDist) : Math.round(roundDist * 0.621371);
-
-    const guessedContrast = getContrastColor(zone.color);
+    const distToDisplay = Math.round(currentUnits === 'metric' ? roundDist : roundDist * 0.621371);
 
     document.getElementById('modal-details').innerHTML = `
         <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
             <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
-            
             <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span class="climate-pill" style="background: ${actualColor}; color: ${actualContrast}">${actualCode}</span>
@@ -272,24 +259,16 @@ function submitGuess(zone) {
             </div>
         </div>
         <div style="text-align: left; padding: 0 10px; margin-bottom: 20px;">
-             <div style="font-weight: 800; color: var(--accent-color); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">ROUND GAP: ${distToDisplay} ${unitLabel}</div>
-             <div style="font-size: 0.65rem; color: #444; font-weight: 800; display:flex; align-items:center;">
-                CLOSEST <div style="display:flex; justify-content:center; align-items:center; width:40px; height:18px; line-height:1; background:${zone.color}; color:${guessedContrast}; border-radius:4px; margin:0 8px; font-size:0.6rem; font-weight:900;">${zone.code}</div> MATCH: <span style="color: #666; margin-left: 5px;">${refCity ? refCity.city.trim() + ', ' + refCity.country.trim() : "N/A"}</span>
+             <div style="font-weight: 800; color: #ababab; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">GAP: ${distToDisplay} ${unitLabel}</div>
+             <div style="font-size: 0.63rem; color: #555; font-weight: 800; display:flex; align-items:center;">
+                CLOSEST <span style="display:inline-flex; justify-content:center; align-items:center; min-width:35px; height:16px; background:${zone.color}; color:${getContrastColor(zone.color)}; border-radius:3px; margin:0 6px; font-size:0.55rem; font-weight:900;">${zone.code}</span> MATCH: <span style="color: #666; margin-left: 5px;">${refCity ? refCity.city.trim() + ', ' + refCity.country.trim() : "N/A"}</span>
              </div>
         </div>
     `;
 
     document.getElementById('feedback-overlay').classList.remove('hidden');
     if (currentRound === maxRounds) {
-        document.getElementById('modal-btn').textContent = "View Summary";
-        saveBestScore();
-    }
-}
-
-function saveBestScore() {
-    const currentBest = localStorage.getItem('best_images_min_dist');
-    if (!currentBest || sessionScore < parseFloat(currentBest)) {
-        localStorage.setItem('best_images_min_dist', sessionScore);
+        document.getElementById('modal-btn').textContent = "View Final Results";
     }
 }
 
@@ -299,47 +278,41 @@ function showFinalResults() {
     const btn = document.getElementById('modal-btn');
     const modal = document.getElementById('modal');
 
-    modal.style.borderColor = "#ababab"; 
-    modal.style.maxWidth = "640px"; 
+    modal.style.maxWidth = "600px"; 
     title.innerHTML = `<span style="font-size: 0.8rem; color: #777; letter-spacing: 2px; text-transform: uppercase;">Final Performance</span><br>Session Complete`;
     title.style.color = "#fff";
     
-    const displayDist = currentUnits === 'metric' ? sessionScore : Math.round(sessionScore * 0.621371);
+    const displayDist = Math.round(currentUnits === 'metric' ? sessionScore : sessionScore * 0.621371);
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
 
     let historyHtml = sessionHistory.map((h, i) => {
-        const d = currentUnits === 'metric' ? h.dist : Math.round(h.dist * 0.621371);
+        const d = Math.round(currentUnits === 'metric' ? h.dist : h.dist * 0.621371);
         return `
-            <div style="display: grid; grid-template-columns: 25px 1.2fr 1.5fr auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
+            <div style="display: grid; grid-template-columns: 25px 1fr 1.5fr auto; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
                 <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i+1}</span>
                 <div>
-                   <div style="font-weight:700; color:#eee; font-size: 0.85rem; margin-bottom:4px;">${h.city}</div>
-                   <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="display:flex; justify-content:center; align-items:center; min-width:35px; min-height:16px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
-                        <a href="${h.imgUrl}" target="_blank" style="color: #444; text-decoration: none; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.5px; border: 1px solid #222; padding: 1px 4px; border-radius: 3px;">IMAGE ↗</a>
+                   <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}</div>
+                   <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="display:flex; justify-content:center; align-items:center; min-width:32px; height:15px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
+                        <a href="${h.imgUrl}" target="_blank" style="color: #333; text-decoration: none; font-size: 0.5rem; font-weight: 800; border: 1px solid #151515; padding: 1px 3px; border-radius: 2px;">IMG ↗</a>
                    </div>
                 </div>
-                <div style="color:var(--text-secondary); font-size: 0.7rem;">
-                   <div style="display:flex; align-items:center; font-weight:800; text-transform:uppercase; font-size: 0.55rem; color: #333; margin-bottom: 4px;">Closest <div style="display:flex; justify-content:center; align-items:center; width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
+                <div style="color:var(--text-secondary); font-size: 0.65rem;">
+                   <div style="display:flex; align-items:center; font-weight:800; font-size: 0.5rem; color: #222; margin-bottom: 2px;">Closest <div style="display:flex; justify-content:center; align-items:center; min-width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
                    ${h.refCity}
                 </div>
-                <div style="font-weight:900; color:#eee; font-size: 0.85rem;">${d}<span style="color:#444; font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
+                <div style="font-weight:900; color:#eee; font-size: 0.85rem;">${d}<span style="color:#333; font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
             </div>
         `;
     }).join('');
 
     details.innerHTML = `
-        <div style="margin: 20px 0;">
-            ${historyHtml}
+        <div style="margin: 20px 0;">${historyHtml}</div>
+        <div style="margin: 30px 0; text-align: center;">
+            <div style="font-size: 3.5rem; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -2px;">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: #444; margin-left: 5px;">${unitLabel}</span></div>
+            <div style="color:#555; font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL GEOGRAPHIC DEVIATION</div>
         </div>
-        <div style="margin: 30px 0 40px 0; text-align: center;">
-            <div style="font-size: 3.5rem; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -2px;">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: #555; margin-left: 5px;">${unitLabel}</span></div>
-            <div style="color:var(--text-secondary); font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL GEOGRAPHIC DEVIATION</div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
-             <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px; font-size: 0.95rem;">Play New Challenge</button>
-             <a href="../index.html" style="color:var(--text-secondary); text-decoration:none; font-size: 0.85rem; font-weight:700; margin-top: 10px;">Back to Hub</a>
-        </div>
+        <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px;">Play New Challenge</button>
     `;
     btn.style.display = "none";
 }
@@ -347,36 +320,41 @@ function showFinalResults() {
 function setupInteraction() {
     const input = document.getElementById('legend-search');
     const drop = document.getElementById('dropdown');
-    let filtered = [];
+
     input.oninput = () => {
         const q = input.value.toLowerCase().trim();
-        if (q.length < 1) { drop.classList.add('hidden'); return; }
-        filtered = legendData.filter(l => l.code.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)).slice(0, 10);
+        if (q.length < 1) { filteredPool = []; drop.classList.add('hidden'); return; }
+        filteredPool = legendData.filter(l => l.code.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)).slice(0, 10);
         drop.innerHTML = "";
-        filtered.forEach(l => {
+        filteredPool.forEach(l => {
             const contrast = getContrastColor(l.color);
             const div = document.createElement('div');
             div.className = 'option';
             div.style.display = "flex";
             div.style.alignItems = "center";
             div.style.gap = "15px";
-            div.innerHTML = `
-                <div style="display:flex; justify-content:center; align-items:center; width:40px; height:18px; background:${l.color}; border-radius:3px; font-size:0.6rem; font-weight:900; color:${contrast}">${l.code}</div>
-                <div><strong>${l.code}</strong> ${l.description}</div>
-            `;
+            div.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${l.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast}; flex-shrink:0;">${l.code}</div><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>${l.code}</strong> ${l.description}</div>`;
             div.onclick = () => { input.value = ""; drop.classList.add('hidden'); submitGuess(l); };
             drop.appendChild(div);
         });
-        drop.classList.remove('hidden');
+        drop.classList.toggle('hidden', filteredPool.length === 0);
     };
+
     input.onkeydown = (e) => {
-        if (e.key === 'Enter' && filtered.length > 0) {
-            e.stopPropagation();
-            submitGuess(filtered[0]);
-            input.value = "";
-            drop.classList.add('hidden');
+        if (e.key === 'Enter') {
+            if (filteredPool.length > 0 && !drop.classList.contains('hidden')) {
+                e.preventDefault();
+                e.stopPropagation();
+                submitGuess(filteredPool[0]);
+                input.value = "";
+                drop.classList.add('hidden');
+            } else {
+                const overlay = document.getElementById('feedback-overlay');
+                if (overlay.classList.contains('hidden')) {
+                    e.preventDefault();
+                }
+            }
         }
     };
 }
-
-document.addEventListener('DOMContentLoaded', start);
+start();
