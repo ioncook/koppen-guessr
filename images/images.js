@@ -12,6 +12,19 @@ let sessionHistory = [];
 let currentUnits = localStorage.getItem('site_units') || 'metric';
 
 /**
+ * UTILITY: GET CONTRAST COLOR (Black or White)
+ */
+function getContrastColor(hex) {
+    if (!hex) return "#fff";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    // HSP color model brightness calculation
+    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+    return hsp > 127.5 ? "#000" : "#fff";
+}
+
+/**
  * INITIALIZATION
  */
 async function start() {
@@ -25,7 +38,7 @@ async function start() {
 
         citiesData = allCities.filter(c => c.zone > 0).map(c => {
             if (isDataDead(c)) {
-                const near = findNearestAlive(c, allCities);
+                const near = findNearestValid(c, allCities);
                 if (near) {
                     c.temp = near.temp;
                     c.precip = near.precip;
@@ -46,7 +59,6 @@ async function start() {
                 document.getElementById('feedback-overlay').classList.add('hidden');
                 loadRound();
             } else {
-                // Game actually ends here
                 gameOver = true;
                 showFinalResults();
             }
@@ -93,7 +105,7 @@ function isDataDead(c) {
     return c.temp.every(t => t === 0);
 }
 
-function findNearestAlive(city, all) {
+function findNearestValid(city, all) {
     let best = null;
     let minDist = Infinity;
     const pool = all.filter(c => (c.population || 0) > 300000 && !isDataDead(c)).slice(0, 1000);
@@ -141,8 +153,12 @@ async function loadRound() {
                 if (fPid !== "-1") imgUrl = (fData.query.pages[fPid].original) ? fData.query.pages[fPid].original.source : (fData.query.pages[fPid].thumbnail ? fData.query.pages[fPid].thumbnail.source : null);
             }
 
-            // FILTER: Block Mosaics and Night images
-            const badTerms = ['montage', 'mosaic', 'collage', 'gallery', 'collection', 'night', 'at_night', 'blue_hour', 'midnight', 'evening'];
+            // FILTER: Block Mosaics, Maps, and Night images
+            const badTerms = [
+                'montage', 'mosaic', 'collage', 'gallery', 'collection', 
+                'night', 'at_night', 'blue_hour', 'midnight', 'evening',
+                'map', 'locator', 'location', 'district', 'region', 'scheme', 'diagram'
+            ];
             if (imgUrl && badTerms.some(term => imgUrl.toLowerCase().includes(term))) {
                 imgUrl = null;
             }
@@ -154,10 +170,11 @@ async function loadRound() {
                     testImg.onload = () => {
                         if (thisRoundId === roundId) {
                             currentCity = draft;
+                            currentCity.activeImg = imgUrl; 
                             container.style.backgroundImage = `url(${imgUrl})`;
                             loader.classList.add('hidden');
                             document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
-                            document.getElementById('legend-search').focus(); // AUTOFOCUS FOR RAPID TYPING
+                            document.getElementById('legend-search').focus();
                             found = true;
                         }
                         resolve();
@@ -216,15 +233,22 @@ function submitGuess(zone) {
     const actualStr = actual ? actual.description : "Unclassified";
     const actualColor = actual ? actual.color : "#333";
     const actualCode = actual ? actual.code : "??";
+    const actualContrast = getContrastColor(actualColor);
 
     // Track round history with reference city
     sessionHistory.push({
-        city: currentCity.city,
-        country: currentCity.country,
+        city: currentCity.city.trim(),
+        country: currentCity.country.trim(),
         dist: Math.round(roundDist),
         zoneCode: actualCode,
         zoneColor: actualColor,
-        refCity: refCity ? `${refCity.city}, ${refCity.country}` : "Global Registry"
+        zoneContrast: actualContrast, 
+        guessedId: zone.id,
+        guessedCode: zone.code, 
+        guessedColor: zone.color,
+        guessedContrast: getContrastColor(zone.color),
+        refCity: refCity ? `${refCity.city.trim()}, ${refCity.country.trim()}` : "Global Registry",
+        imgUrl: currentCity.activeImg
     });
 
     const titleEl = document.getElementById('modal-title');
@@ -234,6 +258,8 @@ function submitGuess(zone) {
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
     const distToDisplay = currentUnits === 'metric' ? Math.round(roundDist) : Math.round(roundDist * 0.621371);
 
+    const guessedContrast = getContrastColor(zone.color);
+
     document.getElementById('modal-details').innerHTML = `
         <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
@@ -241,19 +267,20 @@ function submitGuess(zone) {
             
             <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="climate-pill" style="background: ${actualColor}">${actualCode}</span>
+                <span class="climate-pill" style="background: ${actualColor}; color: ${actualContrast}">${actualCode}</span>
                 <span style="font-weight: 700; color: #fff;">${actualStr}</span>
             </div>
         </div>
         <div style="text-align: left; padding: 0 10px; margin-bottom: 20px;">
              <div style="font-weight: 800; color: var(--accent-color); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">ROUND GAP: ${distToDisplay} ${unitLabel}</div>
-             <div style="font-size: 0.65rem; color: #444; font-weight: 800;">CLOSEST MATCH: <span style="color: #666;">${refCity ? refCity.city + ', ' + refCity.country : "N/A"}</span></div>
+             <div style="font-size: 0.65rem; color: #444; font-weight: 800; display:flex; align-items:center;">
+                CLOSEST <div style="display:flex; justify-content:center; align-items:center; width:40px; height:18px; line-height:1; background:${zone.color}; color:${guessedContrast}; border-radius:4px; margin:0 8px; font-size:0.6rem; font-weight:900;">${zone.code}</div> MATCH: <span style="color: #666; margin-left: 5px;">${refCity ? refCity.city.trim() + ', ' + refCity.country.trim() : "N/A"}</span>
+             </div>
         </div>
     `;
 
     document.getElementById('feedback-overlay').classList.remove('hidden');
     if (currentRound === maxRounds) {
-        // gameOver = true; // DO NOT SET GAME OVER YET
         document.getElementById('modal-btn').textContent = "View Summary";
         saveBestScore();
     }
@@ -273,7 +300,7 @@ function showFinalResults() {
     const modal = document.getElementById('modal');
 
     modal.style.borderColor = "#ababab"; 
-    modal.style.maxWidth = "580px"; 
+    modal.style.maxWidth = "640px"; 
     title.innerHTML = `<span style="font-size: 0.8rem; color: #777; letter-spacing: 2px; text-transform: uppercase;">Final Performance</span><br>Session Complete`;
     title.style.color = "#fff";
     
@@ -283,14 +310,17 @@ function showFinalResults() {
     let historyHtml = sessionHistory.map((h, i) => {
         const d = currentUnits === 'metric' ? h.dist : Math.round(h.dist * 0.621371);
         return `
-            <div style="display: grid; grid-template-columns: 30px 1.2fr 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
-                <span style="font-weight:900; color:#333; font-size: 0.7rem;">0${i+1}</span>
+            <div style="display: grid; grid-template-columns: 25px 1.2fr 1.5fr auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
+                <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i+1}</span>
                 <div>
-                   <div style="font-weight:700; color:#eee; font-size: 0.85rem;">${h.city}</div>
-                   <div style="color:${h.zoneColor}; font-size: 0.6rem; font-weight:800; text-transform:uppercase;">${h.zoneCode}</div>
+                   <div style="font-weight:700; color:#eee; font-size: 0.85rem; margin-bottom:4px;">${h.city}</div>
+                   <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="display:flex; justify-content:center; align-items:center; min-width:35px; min-height:16px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
+                        <a href="${h.imgUrl}" target="_blank" style="color: #444; text-decoration: none; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.5px; border: 1px solid #222; padding: 1px 4px; border-radius: 3px;">IMAGE ↗</a>
+                   </div>
                 </div>
                 <div style="color:var(--text-secondary); font-size: 0.7rem;">
-                   <div style="font-weight:800; text-transform:uppercase; font-size: 0.55rem; color: #444; margin-bottom: 2px;">Closest ${h.zoneCode}</div>
+                   <div style="display:flex; align-items:center; font-weight:800; text-transform:uppercase; font-size: 0.55rem; color: #333; margin-bottom: 4px;">Closest <div style="display:flex; justify-content:center; align-items:center; width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
                    ${h.refCity}
                 </div>
                 <div style="font-weight:900; color:#eee; font-size: 0.85rem;">${d}<span style="color:#444; font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
@@ -308,7 +338,7 @@ function showFinalResults() {
         </div>
         <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
              <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px; font-size: 0.95rem;">Play New Challenge</button>
-             <a href="../index.html" style="color:var(--text-secondary); text-decoration:none; font-size: 0.85rem; font-weight:700; margin-top: 10px;">Back to Dashboard</a>
+             <a href="../index.html" style="color:var(--text-secondary); text-decoration:none; font-size: 0.85rem; font-weight:700; margin-top: 10px;">Back to Hub</a>
         </div>
     `;
     btn.style.display = "none";
@@ -324,9 +354,16 @@ function setupInteraction() {
         filtered = legendData.filter(l => l.code.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)).slice(0, 10);
         drop.innerHTML = "";
         filtered.forEach(l => {
+            const contrast = getContrastColor(l.color);
             const div = document.createElement('div');
             div.className = 'option';
-            div.innerHTML = `<strong>${l.code}</strong> ${l.description}`;
+            div.style.display = "flex";
+            div.style.alignItems = "center";
+            div.style.gap = "15px";
+            div.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; width:40px; height:18px; background:${l.color}; border-radius:3px; font-size:0.6rem; font-weight:900; color:${contrast}">${l.code}</div>
+                <div><strong>${l.code}</strong> ${l.description}</div>
+            `;
             div.onclick = () => { input.value = ""; drop.classList.add('hidden'); submitGuess(l); };
             drop.appendChild(div);
         });

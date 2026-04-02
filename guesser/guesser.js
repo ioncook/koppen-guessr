@@ -6,6 +6,18 @@ let gameOver = false;
 let currentUnits = localStorage.getItem('site_units') || 'metric';
 
 /**
+ * UTILITY: GET CONTRAST COLOR
+ */
+function getContrastColor(hex) {
+    if (!hex) return "#fff";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+    return hsp > 127.5 ? "#000" : "#fff";
+}
+
+/**
  * Initialization
  */
 async function init() {
@@ -59,8 +71,8 @@ function isDataZero(c) {
 function findNearestValid(city, all) {
     let best = null;
     let minDist = Infinity;
-    const candidates = all.filter(c => (c.population || 0) > 300000 && !isDataZero(c)).slice(0, 1000);
-    for (const other of candidates) {
+    const pool = all.filter(c => (c.population || 0) > 300000 && !isDataZero(c)).slice(0, 500);
+    for (const other of pool) {
         const d = Math.pow(city.lat - other.lat, 2) + Math.pow(city.lng - other.lng, 2);
         if (d < minDist) { minDist = d; best = other; }
     }
@@ -68,14 +80,14 @@ function findNearestValid(city, all) {
 }
 
 function processCityData(city) {
-    const l = legendData.find(leg => leg.id == city.zone) || { code: "??", color: "#333" };
+    const l = legendData.find(item => item.id === city.zone);
     return {
+        id: city.zone,
         name: city.city,
         country: city.country,
-        code: l.code,
-        color: l.color,
-        description: l.description,
-        zone: city.zone,
+        code: l ? l.code : "??",
+        color: l ? l.color : "#333",
+        description: l ? l.description : "Unknown",
         lat: city.lat,
         lng: city.lng,
         temps: city.temp,
@@ -118,10 +130,14 @@ function setupSearch() {
             const label = `${c.city.replace(/[\s\u00A0]+/g, ' ').trim()}, ${c.country.replace(/[\s\u00A0]+/g, ' ').trim()}`;
             div.textContent = label;
 
-            div.onclick = () => { submitGuess(c); input.value = ""; drop.classList.add('hidden'); };
+            div.onclick = () => { 
+                submitGuess(c); 
+                input.value = ""; 
+                drop.classList.add('hidden'); 
+            };
             drop.appendChild(div);
         });
-        drop.classList.remove('hidden');
+        drop.classList.toggle('hidden', filtered.length === 0);
     };
 
     input.onkeydown = (e) => {
@@ -133,21 +149,15 @@ function setupSearch() {
     };
 }
 
-/**
- * GAME LOGIC
- */
-function submitGuess(rawCity) {
+function submitGuess(city) {
     if (gameOver) return;
+    const g = processCityData(city);
+    sessionGuesses.unshift(g);
     guesses++;
     document.getElementById('streak-value').textContent = guesses;
-
-    const g = processCityData(rawCity);
-    sessionGuesses.unshift(g);
+    
     renderGuesses();
-
-    if (g.name === targetCity.name) {
-        endGame();
-    }
+    if (g.name === targetCity.name) endGame();
 }
 
 function renderGuesses() {
@@ -160,19 +170,20 @@ function renderGuesses() {
         // 1. City Name
         const nameCol = document.createElement('div');
         nameCol.className = 'column';
-        nameCol.innerHTML = `<span class="val">${g.name}</span><span class="label">${g.country}</span>`;
+        nameCol.innerHTML = `<span class="val">${g.name.trim()}</span><span class="label">${g.country}</span>`;
         row.appendChild(nameCol);
 
         // 2. Zone
         const zoneCol = document.createElement('div');
         const matchCount = getZoneMatch(g.code, targetCity.code);
         let accuracy = 'wrong';
-        if (g.zone == targetCity.zone) accuracy = 'exact';
+        if (g.id == targetCity.id) accuracy = 'exact';
         else if (matchCount === 2) accuracy = 'close';
         else if (matchCount === 1) accuracy = 'close'; 
         
+        const contrast = getContrastColor(g.color);
         zoneCol.className = `column ${accuracy}`;
-        zoneCol.innerHTML = `<span class="zone-field" style="background:${g.color}">${g.code}</span><span class="label">ZONE</span>`;
+        zoneCol.innerHTML = `<span class="climate-pill" style="background:${g.color}; color:${contrast}">${g.code}</span><span class="label">ZONE</span>`;
         row.appendChild(zoneCol);
 
         // 3. Precip
@@ -249,13 +260,6 @@ function createChartsCol(g, t) {
         const diff = Math.abs(v - t.temps[i]);
         if (diff < 1) bar.style.background = "#388e3c";
         else if (diff < 3) bar.style.background = "#fbc02d";
-        
-        if (diff > 0.5) {
-            const arr = document.createElement('span');
-            arr.className = "bar-arrow";
-            arr.textContent = v < t.temps[i] ? "↑" : "↓";
-            bar.appendChild(arr);
-        }
         tRow.appendChild(bar);
     });
 
@@ -277,13 +281,6 @@ function createChartsCol(g, t) {
         const diff = Math.abs(v - t.precips[i]);
         if (diff < 10) bar.style.background = "#388e3c";
         else if (diff < 40) bar.style.background = "#fbc02d";
-        
-        if (diff > 5) {
-            const arr = document.createElement('span');
-            arr.className = "bar-arrow";
-            arr.textContent = v < t.precips[i] ? "↑" : "↓";
-            bar.appendChild(arr);
-        }
         pRow.appendChild(bar);
     });
 
@@ -303,6 +300,8 @@ function endGame() {
         localStorage.setItem(bestKey, guesses);
     }
 
+    const contrast = getContrastColor(targetCity.color);
+
     content.innerHTML = `
         <div style="background:#050505; border:1px solid #1a1a1a; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
             <div style="color:var(--text-secondary); font-size: 0.6rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">TARGET CITY</div>
@@ -310,7 +309,7 @@ function endGame() {
             <div style="color:var(--text-secondary); margin-bottom: 15px;">${targetCity.country}</div>
             
             <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
-                <span class="climate-pill" style="background:${targetCity.color}">${targetCity.code}</span>
+                <span class="climate-pill" style="background:${targetCity.color}; color:${contrast}">${targetCity.code}</span>
                 <span style="font-weight:700; color:#fff">${targetCity.description}</span>
             </div>
         </div>
