@@ -13,10 +13,5 @@
 ### Imagery
 - **Climate Visuals**: Ground-level photography sourced from **Wikimedia Commons** under CC-BY-SA licenses, selected for geographical and climatic representation.
 
-## Game Modes
-- **Streaks**: Identify the climate zone of random world capitals. How long can you keep the streak alive?
-- **Images**: Visual climate identification. Guess the zone from a single image and minimize your total distance.
-- **Data Guesser**: Deductive reasoning. Find the secret city by comparing its climate data to your guesses.
-
 ---
 Built with Antigravity.
