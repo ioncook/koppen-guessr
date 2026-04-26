@@ -3,10 +3,10 @@ let legendData = [];
 let currentCity = null;
 let currentRound = 1;
 const maxRounds = 5;
-let sessionScore = 0; 
+let sessionScore = 0;
 let gameOver = false;
-let roundId = 0; 
-let sessionHistory = []; 
+let roundId = 0;
+let sessionHistory = [];
 let filteredPool = []; // For search synchronization
 
 // Global Unit Preference
@@ -50,10 +50,11 @@ async function start() {
         setupInteraction();
         loadRound();
         syncUnitUI();
+        updateScoreDisplay(); // Fix 0 KM init bug
 
         const handleNext = () => {
             if (gameOver) return; // Prevent double execution mapping to location.reload()
-            
+
             const overlay = document.getElementById('feedback-overlay');
             if (currentRound < maxRounds) {
                 currentRound++;
@@ -144,7 +145,7 @@ async function loadRound() {
             const pId = Object.keys(pages)[0];
 
             let imgUrl = (pId !== "-1" && pages[pId].original) ? pages[pId].original.source : (pId !== "-1" && pages[pId].thumbnail ? pages[pId].thumbnail.source : null);
-            
+
             if (!imgUrl) {
                 const fUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(draft.city)}&prop=pageimages|original&format=json&pithumbsize=1024&redirects=1&origin=*`;
                 const fResp = await fetch(fUrl);
@@ -164,7 +165,7 @@ async function loadRound() {
                     testImg.onload = () => {
                         if (thisRoundId === roundId) {
                             currentCity = draft;
-                            currentCity.activeImg = imgUrl; 
+                            currentCity.activeImg = imgUrl;
                             container.style.backgroundImage = `url(${imgUrl})`;
                             loader.classList.add('hidden');
                             document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
@@ -176,7 +177,7 @@ async function loadRound() {
                     testImg.onerror = () => resolve();
                 });
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 }
 
@@ -184,7 +185,7 @@ async function loadRound() {
  * GEOGRAPHIC SCORING
  */
 function getDist(lat1, lon1, lat2, lon2) {
-    const R = 6371; 
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
@@ -211,12 +212,12 @@ function submitGuess(zone) {
     filteredPool = []; // CLEAR SEARCH
     const input = document.getElementById('legend-search');
     input.blur();
-    
+
     const isCorrect = (zone.id == currentCity.zone);
     const result = isCorrect ? { dist: 0, city: currentCity } : findNearestWithZoneResult(zone.id, currentCity.lat, currentCity.lng);
     const roundDist = Math.round(result.dist);
     const refCity = result.city;
-    
+
     sessionScore += roundDist;
     updateScoreDisplay();
 
@@ -232,9 +233,9 @@ function submitGuess(zone) {
         dist: roundDist,
         zoneCode: actualCode,
         zoneColor: actualColor,
-        zoneContrast: actualContrast, 
+        zoneContrast: actualContrast,
         guessedId: zone.id,
-        guessedCode: zone.code, 
+        guessedCode: zone.code,
         guessedColor: zone.color,
         guessedContrast: getContrastColor(zone.color),
         refCity: refCity ? `${refCity.city.trim()}, ${refCity.country.trim()}` : "Global Registry",
@@ -242,9 +243,9 @@ function submitGuess(zone) {
     });
 
     const titleEl = document.getElementById('modal-title');
-    titleEl.textContent = isCorrect ? "Correct!" : "Deviation Detected";
+    titleEl.textContent = isCorrect ? "Correct!" : "Wrong Zone...";
     titleEl.style.color = isCorrect ? "#388e3c" : "#d32f2f";
-    
+
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
     const distToDisplay = Math.round(currentUnits === 'metric' ? roundDist : roundDist * 0.621371);
 
@@ -278,10 +279,10 @@ function showFinalResults() {
     const btn = document.getElementById('modal-btn');
     const modal = document.getElementById('modal');
 
-    modal.style.maxWidth = "600px"; 
-    title.innerHTML = `<span style="font-size: 0.8rem; color: #777; letter-spacing: 2px; text-transform: uppercase;">Final Performance</span><br>Session Complete`;
+    modal.style.maxWidth = "600px";
+    title.innerHTML = `Results`;
     title.style.color = "#fff";
-    
+
     const displayDist = Math.round(currentUnits === 'metric' ? sessionScore : sessionScore * 0.621371);
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
 
@@ -289,7 +290,7 @@ function showFinalResults() {
         const d = Math.round(currentUnits === 'metric' ? h.dist : h.dist * 0.621371);
         return `
             <div style="display: grid; grid-template-columns: 25px 1fr 1.5fr auto; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
-                <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i+1}</span>
+                <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i + 1}</span>
                 <div>
                    <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}</div>
                    <div style="display: flex; align-items: center; gap: 6px;">
@@ -310,9 +311,10 @@ function showFinalResults() {
         <div style="margin: 20px 0;">${historyHtml}</div>
         <div style="margin: 30px 0; text-align: center;">
             <div style="font-size: 3.5rem; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -2px;">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: #444; margin-left: 5px;">${unitLabel}</span></div>
-            <div style="color:#555; font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL GEOGRAPHIC DEVIATION</div>
+            <div style="color:#555; font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL DISTANCE</div>
         </div>
-        <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px;">Play New Challenge</button>
+        <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px;">New Game</button>
+        <a href="../index.html" style="display: block; margin-top: 15px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 700; text-align: center;">Back to Home</a>
     `;
     btn.style.display = "none";
 }

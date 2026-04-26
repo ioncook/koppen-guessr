@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,11 +14,11 @@
         .home-link {
             text-decoration: none;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 700;
-            transition: color 0.2s;
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .home-link:hover { color: var(--accent-color); }
 
         #results-container {
             display: flex;
@@ -50,22 +51,41 @@
             transition: all 0.3s;
         }
 
-        .column .val { font-weight: 800; font-size: 0.95rem; line-height: 1.2; }
-        .column .label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-top: 4px; letter-spacing: 0.5px; }
+        .column .val {
+            font-weight: 800;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+
+        .column .label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
 
         /* Charts Column */
-        .chart-col { display: flex; flex-direction: column; gap: 4px; padding: 10px 4px 6px 4px; }
+        .chart-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 4px 6px 4px;
+        }
+
         .spark-row {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 2px;
             height: 38px;
             width: 100%;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 4px;
             position: relative;
             padding: 4px 2px 2px 2px;
         }
+
         .spark-row::before {
             content: attr(data-type);
             position: absolute;
@@ -76,6 +96,7 @@
             opacity: 0.3;
             color: white;
         }
+
         .bar {
             background: #222;
             border-top-left-radius: 2px;
@@ -86,29 +107,63 @@
             justify-content: flex-start;
             position: relative;
         }
-        .bar-arrow { font-size: 0.5rem; font-weight: 900; margin-top: -10px; color: white; opacity: 0.6; }
+
+        .bar-arrow {
+            font-size: 0.5rem;
+            font-weight: 900;
+            margin-top: -10px;
+            color: white;
+            opacity: 0.6;
+        }
 
         /* Accuracy Colors - Consistent with Streaks/Images */
-        .exact { background: #1b5e20 !important; border-color: #2e7d32 !important; }
-        .close { background: #fbc02d !important; border-color: #f9a825 !important; color: #000 !important; }
-        .close .label { color: rgba(0,0,0,0.5) !important; }
-        .wrong { background: #141414 !important; border-color: #222 !important; }
+        .exact {
+            background: #1b5e20 !important;
+            border-color: #2e7d32 !important;
+        }
+
+        .close {
+            background: #fbc02d !important;
+            border-color: #f9a825 !important;
+            color: #000 !important;
+        }
+
+        .close .label {
+            color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .wrong {
+            background: #141414 !important;
+            border-color: #222 !important;
+        }
 
         /* Climate Pill */
-        .zone-field { padding: 4px 10px; border-radius: 6px; font-weight: 850; font-size: 0.85rem; color: white; text-shadow: 0 1px 1px rgba(0,0,0,0.4); display: inline-block; }
+        .zone-field {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 850;
+            font-size: 0.85rem;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            display: inline-block;
+        }
 
         /* Modal Overlays */
         #game-over-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 2000;
         }
-        #game-over-overlay.hidden { display: none; }
+
+        #game-over-overlay.hidden {
+            display: none;
+        }
+
         .modal-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -129,12 +184,16 @@
             justify-content: center;
             margin-top: 10px;
         }
-        #unit-toggle-small .active { color: var(--accent-color); }
+
+        #unit-toggle-small .active {
+            color: var(--accent-color);
+        }
 
         .search-area {
             margin: 20px 0;
             position: relative;
         }
+
         #guess-search {
             width: 100%;
             background: var(--button-bg);
@@ -145,6 +204,7 @@
             font-size: 1rem;
             font-family: inherit;
         }
+
         #dropdown-options {
             position: absolute;
             top: 100%;
@@ -158,17 +218,40 @@
             overflow-y: auto;
             z-index: 100;
         }
-        #dropdown-options.hidden { display: none; }
-        .option { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
-        .option:hover { background: #1a1a1a; }
+
+        .empty-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-top: 60px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.3;
+        }
+
+        #dropdown-options.hidden {
+            display: none;
+        }
+
+        .option {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .option:hover {
+            background: #1a1a1a;
+        }
     </style>
 </head>
+
 <body>
     <div id="game-container">
         <header>
             <div style="display:flex; align-items:center;">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px;">Data Guesser</h1>
+                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Data Guesser</h1>
             </div>
             <div id="stats">
                 <span id="streak-label">TOTAL GUESSES</span>
@@ -178,7 +261,9 @@
 
         <main>
             <div class="card" style="padding-bottom: 20px;">
-                <p id="instruction-text" style="color:var(--text-secondary); font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Guess the secret city</p>
+                <p id="instruction-text"
+                    style="color:var(--text-secondary); font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
+                    Guess the secret city</p>
                 <div class="search-area">
                     <input type="text" id="guess-search" placeholder="Type a city name..." autocomplete="off">
                     <div id="dropdown-options" class="hidden"></div>
@@ -195,15 +280,23 @@
 
         <div id="game-over-overlay" class="hidden">
             <div class="modal-card">
-                <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 20px;">City Discovered!</h2>
+                <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 20px;">Correct!</h2>
                 <div id="modal-content" style="margin-bottom: 30px;"></div>
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <button onclick="location.reload()" class="modal-btn" style="width:100%; background:var(--button-bg); border:1px solid var(--border-color); color:var(--text-color); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">New Challenge</button>
-                    <a href="../index.html" style="color:var(--text-secondary); text-decoration:none; font-size:0.85rem; font-weight:700; margin-top: 10px;">Back to Hub</a>
+                    <button onclick="location.reload()" class="modal-btn"
+                        style="width:100%; background:var(--button-bg); border:1px solid var(--border-color); color:var(--text-color); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">New
+                        Challenge</button>
+                    <button id="view-guesses-btn" class="modal-btn"
+                        style="width:100%; background:transparent; border:1px solid #333; color:var(--text-secondary); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">View
+                        Guesses</button>
+                    <a href="../index.html"
+                        style="color:var(--text-secondary); text-decoration:none; font-size:0.85rem; font-weight:700; margin-top: 10px;">Back
+                        to Hub</a>
                 </div>
             </div>
         </div>
     </div>
     <script src="guesser.js"></script>
 </body>
+
 </html>

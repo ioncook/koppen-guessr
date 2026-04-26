@@ -28,7 +28,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            min-height: 100dvh;
             padding: 20px;
         }
 
@@ -40,7 +40,7 @@
         .hero h1 {
             font-size: 4rem;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #ababab, #666666);
+            background: #ababab;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -164,9 +164,19 @@
             z-index: 1000;
             transition: all 0.2s;
         }
-        #unit-toggle:hover { border-color: #444; }
-        .unit.active { color: var(--text-color); }
-        .unit { color: #444; transition: color 0.2s; }
+
+        #unit-toggle:hover {
+            border-color: #444;
+        }
+
+        .unit.active {
+            color: var(--text-color);
+        }
+
+        .unit {
+            color: #444;
+            transition: color 0.2s;
+        }
     </style>
 </head>
 
@@ -183,44 +193,41 @@
 
     <div class="modes-grid">
         <a href="streaks/streaks.html" class="mode-card">
-            <span class="badge">ACTIVE</span>
+
             <div class="mode-icon">🔥</div>
             <div class="mode-title">Streaks</div>
-            <div class="mode-desc">Guess correctly to stay alive. How many global climates can you identify in a row?
-            </div>
-            <div class="best-score">Personal Best: <strong id="best-streaks">0</strong></div>
+            <div class="mode-desc">Identify the Köppen zone of a given city; guess as many as you can in a row. </div>
+            <div class="best-score">Best Streak: <strong id="best-streaks">0</strong></div>
         </a>
 
         <a href="images/images.html" class="mode-card">
-            <span class="badge">ACTIVE</span>
+
             <div class="mode-icon">🖼️</div>
             <div class="mode-title">Images</div>
-            <div class="mode-desc">Identify the climate zone from street-level imagery. Scores are based on minimum geographic deviation.</div>
+            <div class="mode-desc">Guess the Köppen zone from an image. 5 rounds, aim for zero distance.</div>
             <div class="best-score">Min Deviation: <strong id="best-images">---</strong></div>
         </a>
 
         <a href="guesser/guesser.html" class="mode-card">
-            <span class="badge">NEW</span>
+
             <div class="mode-icon">🔭</div>
             <div class="mode-title">Data Guesser</div>
-            <div class="mode-desc">Guess the city by analyzing its raw climate data. Compare attributes like monthly
-                temperature and precipitation to find the answer.</div>
+            <div class="mode-desc">Guess a mystery city based off of the difference to other cities. Aim for the fewest
+                guesses possible.</div>
             <div class="best-score">Min Guesses: <strong id="best-guesser">---</strong></div>
         </a>
     </div>
 
-    <footer>
-        &copy; 2026 KöppenGuessr. Built with climate precision.
-    </footer>
+
 
     <script>
         // Use Global Unit State
         let currentUnits = localStorage.getItem('site_units') || 'metric';
-        
+
         function syncUI() {
             document.querySelectorAll('.unit').forEach(u => u.classList.remove('active'));
             document.getElementById(`unit-${currentUnits}`).classList.add('active');
-            
+
             // Re-render scores based on units
             renderScores();
         }
@@ -233,7 +240,7 @@
 
         function renderScores() {
             const isMetric = currentUnits === 'metric';
-            
+
             // Streaks (Just a number)
             document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
 

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KöppenGuessr | Streaks</title>
+    <link rel="icon" href="data:,">
     <!-- Scripts: PapaParse (CSV) and netcdfjs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/netcdfjs@0.10.0/dist/netcdfjs.min.js"></script>
@@ -13,15 +14,13 @@
         .home-link {
             text-decoration: none;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-right: 20px;
-            transition: color 0.2s;
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .home-link:hover {
-            color: var(--accent-color);
-        }
+
     </style>
 </head>
 
@@ -30,7 +29,7 @@
         <header>
             <div style="display:flex; align-items:center;">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px;">Streaks</h1>
+                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Streaks</h1>
             </div>
             <div id="stats">
                 <span id="streak-label">STREAK</span>
@@ -48,28 +47,26 @@
                     </h3>
                 </div>
                 <div id="game-area">
-                    <p class="instruction">What is the Köppen-Geiger climate zone for this city?</p>
+                    <p style="color:var(--text-secondary); font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom: 2px;">Identify the Climate</p>
 
                     <div id="guess-input-container">
                         <input type="text" id="guess-search" placeholder="Search climate zone (e.g. Af, Cfb, Desert)..."
                             autocomplete="off">
                         <div id="dropdown-options" class="hidden"></div>
                     </div>
-
-                    <div id="feedback" class="hidden">
-                        <p id="feedback-message"></p>
-                        <p id="feedback-details"></p>
-                        <button id="next-btn" class="hidden">Next City</button>
-                    </div>
                 </div>
             </div>
         </main>
 
-        <footer>
-            <p>Data: <a href="https://simplemaps.com/data/world-cities">worldcities</a> & <a
-                    href="https://www.nature.com/articles/s41597-023-02549-6">Beck et al. (2023)</a> | Styled by
-                Antigravity</p>
-        </footer>
+        <div id="feedback-overlay" class="hidden">
+            <div id="modal">
+                <h2 id="feedback-message" style="font-size: 1.8rem; margin-bottom: 20px;"></h2>
+                <div id="feedback-details" style="margin-bottom: 30px;"></div>
+                <button id="next-btn" class="modal-btn" style="width:100%; background:#222; border:1px solid #333; color:#fff; padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">Next City</button>
+            </div>
+        </div>
+
+
     </div>
 
     <script src="streaks.js"></script>

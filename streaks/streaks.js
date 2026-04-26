@@ -4,6 +4,15 @@ let legendData = [];
 let currentCity = null;
 let lastFiltered = [];
 
+function getContrastColor(hex) {
+    if (!hex) return "#fff";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+    return hsp > 127.5 ? "#000" : "#fff";
+}
+
 // DOM Elements
 const streakVal = document.getElementById('streak-value');
 const cityName = document.getElementById('city-name');
@@ -11,7 +20,7 @@ const flagEmoji = document.getElementById('flag-emoji');
 const adminCountry = document.getElementById('admin-country');
 const searchInput = document.getElementById('guess-search');
 const dropdown = document.getElementById('dropdown-options');
-const feedback = document.getElementById('feedback');
+const feedbackOverlay = document.getElementById('feedback-overlay');
 const feedbackMsg = document.getElementById('feedback-message');
 const feedbackDetails = document.getElementById('feedback-details');
 const nextBtn = document.getElementById('next-btn');
@@ -62,8 +71,7 @@ function loadNewCity() {
     searchInput.value = "";
     searchInput.disabled = false;
     dropdown.classList.add('hidden');
-    feedback.classList.add('hidden');
-    nextBtn.classList.add('hidden');
+    feedbackOverlay.classList.add('hidden');
     
     searchInput.focus();
 }
@@ -89,9 +97,18 @@ function setupSearch() {
     searchInput.addEventListener('focus', showAll);
 
     searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && lastFiltered.length === 1) {
-            e.stopPropagation();
-            submitGuess(lastFiltered[0]);
+        if (e.key === 'Enter') {
+            if (lastFiltered.length > 0 && !dropdown.classList.contains('hidden')) {
+                e.preventDefault();
+                e.stopPropagation();
+                submitGuess(lastFiltered[0]);
+                searchInput.value = "";
+                lastFiltered = [];
+                dropdown.classList.add('hidden');
+            } else if (!nextBtn.classList.contains('hidden')) {
+                e.preventDefault();
+                loadNewCity();
+            }
         }
     });
 
@@ -103,7 +120,8 @@ function setupSearch() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !nextBtn.classList.contains('hidden')) {
+        if (e.key === 'Enter' && !feedbackOverlay.classList.contains('hidden')) {
+            e.preventDefault();
             loadNewCity();
         }
     });
@@ -122,16 +140,18 @@ function renderDropdown(filtered) {
     }
 
     filtered.forEach(item => {
+        const contrast = getContrastColor(item.color);
         const option = document.createElement('div');
         option.className = 'option';
-        option.innerHTML = `
-            <div class="color-swatch" style="background-color: ${item.color}"></div>
-            <div class="option-text">
-                <div class="option-code">${item.code}</div>
-                <div class="option-desc">${item.description}</div>
-            </div>
-        `;
-        option.onclick = () => submitGuess(item);
+        option.style.display = "flex";
+        option.style.alignItems = "center";
+        option.style.gap = "15px";
+        option.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${item.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast}; flex-shrink:0;">${item.code}</div><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>${item.code}</strong> ${item.description}</div>`;
+        option.onclick = () => {
+            searchInput.value = "";
+            dropdown.classList.add('hidden');
+            submitGuess(item);
+        };
         dropdown.appendChild(option);
     });
 
@@ -148,30 +168,54 @@ function submitGuess(guess) {
     
     const correctZone = legendData.find(l => l.id === currentCity.zone);
     
-    feedback.classList.remove('hidden');
-    nextBtn.classList.remove('hidden');
-    
     if (guess.id === currentCity.zone) {
         streak++;
-        feedback.className = "correct";
         feedbackMsg.textContent = "Correct!";
-        feedbackDetails.textContent = `The climate in ${currentCity.city} is indeed ${guess.code} (${guess.description}).`;
+        feedbackMsg.style.color = "#388e3c";
+        const contrast = getContrastColor(guess.color);
+        feedbackDetails.innerHTML = `
+            <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
+                <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
+                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CONFIRMED CLIMATE</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${guess.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast};">${guess.code}</span>
+                    <span style="font-weight: 700; color: #fff;">${guess.description}</span>
+                </div>
+            </div>
+        `;
         nextBtn.textContent = "Next Round";
     } else {
-        feedback.className = "wrong";
-        feedbackMsg.textContent = `Wrong! Streak ended at ${streak}.`;
+        feedbackMsg.textContent = `Streak ended at ${streak}`;
+        feedbackMsg.style.color = "#d32f2f";
         
         // Save best score
         const best = parseInt(localStorage.getItem('best_streaks') || 0);
         if (streak > best) localStorage.setItem('best_streaks', streak);
         
         streak = 0;
-        const correctInfo = correctZone ? `${correctZone.code} (${correctZone.description})` : "Unknown";
-        feedbackDetails.textContent = `The correct climate for ${currentCity.city} is ${correctInfo}.`;
+        
+        const actualColor = correctZone ? correctZone.color : "#333";
+        const actualCode = correctZone ? correctZone.code : "??";
+        const actualDesc = correctZone ? correctZone.description : "Unknown";
+        const actualContrast = getContrastColor(actualColor);
+
+        feedbackDetails.innerHTML = `
+            <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
+                <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
+                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${actualColor}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${actualContrast};">${actualCode}</span>
+                    <span style="font-weight: 700; color: #fff;">${actualDesc}</span>
+                </div>
+            </div>
+        `;
         nextBtn.textContent = "Restart Streak";
     }
     
     streakVal.textContent = streak;
+    feedbackOverlay.classList.remove('hidden');
 }
 
 /**

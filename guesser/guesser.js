@@ -26,12 +26,12 @@ async function init() {
             fetch('../cities.json'),
             fetch('../legend.json')
         ]);
-        
+
         const rawCities = await citiesResp.json();
         legendData = await legendResp.json();
-        
-        // Data Fallback for Coastal Cities
-        citiesData = rawCities.filter(c => (c.population || 0) > 100000 && c.zone > 0).map(c => {
+
+        // Data Fallback for Coastal Cities - Filtered to World Capitals
+        citiesData = rawCities.filter(c => c.capital === 'primary' && c.zone > 0).map(c => {
             if (isDataZero(c)) {
                 const near = findNearestValid(c, rawCities);
                 if (near) {
@@ -57,6 +57,12 @@ async function init() {
             syncUnits();
             renderGuesses();
         };
+
+        document.getElementById('view-guesses-btn').onclick = () => {
+            document.getElementById('game-over-overlay').classList.add('hidden');
+        };
+
+        renderGuesses();
 
     } catch (e) {
         console.error("Guesser Init Error:", e);
@@ -114,14 +120,14 @@ function setupSearch() {
 
     input.oninput = () => {
         const q = input.value.toLowerCase().trim();
-        if (q.length < 2) { 
+        if (q.length < 2) {
             filtered = []; // CLEAR RESULTS
-            drop.classList.add('hidden'); 
-            return; 
+            drop.classList.add('hidden');
+            return;
         }
-        
-        filtered = citiesData.filter(c => 
-            c.city.toLowerCase().includes(q) || 
+
+        filtered = citiesData.filter(c =>
+            c.city.toLowerCase().includes(q) ||
             c.country.toLowerCase().includes(q)
         ).slice(0, 10);
 
@@ -129,15 +135,15 @@ function setupSearch() {
         filtered.forEach(c => {
             const div = document.createElement('div');
             div.className = 'option';
-            
+
             // SINGLE TEXT NODE - ZERO HTML WHITESPACE
             const label = `${c.city.replace(/[\s\u00A0]+/g, ' ').trim()}, ${c.country.replace(/[\s\u00A0]+/g, ' ').trim()}`;
             div.textContent = label;
 
-            div.onclick = () => { 
-                submitGuess(c); 
-                input.value = ""; 
-                drop.classList.add('hidden'); 
+            div.onclick = () => {
+                submitGuess(c);
+                input.value = "";
+                drop.classList.add('hidden');
             };
             drop.appendChild(div);
         });
@@ -160,7 +166,7 @@ function submitGuess(city) {
     sessionGuesses.unshift(g);
     guesses++;
     document.getElementById('streak-value').textContent = guesses;
-    
+
     renderGuesses();
     if (g.name === targetCity.name) endGame();
 }
@@ -168,6 +174,12 @@ function submitGuess(city) {
 function renderGuesses() {
     const container = document.getElementById('results-container');
     container.innerHTML = "";
+
+    if (sessionGuesses.length === 0) {
+        container.innerHTML = `<div class="empty-message">Guess a city to begin...</div>`;
+        return;
+    }
+
     sessionGuesses.forEach(g => {
         const row = document.createElement('div');
         row.className = 'result-row';
@@ -184,8 +196,8 @@ function renderGuesses() {
         let accuracy = 'wrong';
         if (g.id == targetCity.id) accuracy = 'exact';
         else if (matchCount === 2) accuracy = 'close';
-        else if (matchCount === 1) accuracy = 'close'; 
-        
+        else if (matchCount === 1) accuracy = 'close';
+
         const contrast = getContrastColor(g.color);
         zoneCol.className = `column ${accuracy}`;
         zoneCol.innerHTML = `<span class="climate-pill" style="background:${g.color}; color:${contrast}">${g.code}</span><span class="label">ZONE</span>`;
@@ -214,7 +226,7 @@ function createNumericCol(label, gVal, tVal, type) {
     const col = document.createElement('div');
     const diff = Math.abs(gVal - tVal);
     let accuracy = "wrong";
-    
+
     if (type === "precip") {
         if (diff < 50) accuracy = "exact";
         else if (diff < 200) accuracy = "close";
@@ -232,7 +244,7 @@ function createNumericCol(label, gVal, tVal, type) {
             displayVal = Math.round(gVal * 0.0393701);
             unit = "in";
         } else {
-            displayVal = Math.round((gVal * 9/5) + 32);
+            displayVal = Math.round((gVal * 9 / 5) + 32);
             unit = "°F";
         }
     }
@@ -245,12 +257,12 @@ function createNumericCol(label, gVal, tVal, type) {
 function createChartsCol(g, t) {
     const col = document.createElement('div');
     col.className = 'column chart-col';
-    
+
     // Temp Spark
     const tRow = document.createElement('div');
     tRow.className = "spark-row";
     tRow.setAttribute('data-type', 'T');
-    
+
     const maxT = Math.max(...g.temps, ...t.temps);
     const minT = Math.min(...g.temps, ...t.temps);
     const rangeT = maxT - minT || 1;
@@ -261,10 +273,18 @@ function createChartsCol(g, t) {
         const h = ((v - minT) / rangeT) * 100;
         bar.style.height = `${Math.max(10, h)}%`;
         bar.style.alignSelf = "end";
-        
+
         const diff = Math.abs(v - t.temps[i]);
-        if (diff < 1) bar.style.background = "#388e3c";
-        else if (diff < 3) bar.style.background = "#fbc02d";
+        if (diff < 0.2) bar.classList.add('exact');
+        else if (diff < 1.0) bar.classList.add('close');
+        else bar.classList.add('wrong');
+
+        if (diff > 0.1) {
+            const arrow = document.createElement('div');
+            arrow.className = 'bar-arrow';
+            arrow.textContent = v < t.temps[i] ? "↑" : "↓";
+            bar.appendChild(arrow);
+        }
         tRow.appendChild(bar);
     });
 
@@ -272,7 +292,7 @@ function createChartsCol(g, t) {
     const pRow = document.createElement('div');
     pRow.className = "spark-row";
     pRow.setAttribute('data-type', 'P');
-    
+
     const maxP = Math.max(...g.precips, ...t.precips);
     const rangeP = maxP || 1;
 
@@ -282,10 +302,18 @@ function createChartsCol(g, t) {
         const h = (v / rangeP) * 100;
         bar.style.height = `${Math.max(10, h)}%`;
         bar.style.alignSelf = "end";
-        
+
         const diff = Math.abs(v - t.precips[i]);
-        if (diff < 10) bar.style.background = "#388e3c";
-        else if (diff < 40) bar.style.background = "#fbc02d";
+        if (diff < 0.05 * t.precips[i] || diff < 3) bar.classList.add('exact');
+        else if (diff < 0.15 * t.precips[i] || diff < 10) bar.classList.add('close');
+        else bar.classList.add('wrong');
+
+        if (diff > 1) {
+            const arrow = document.createElement('div');
+            arrow.className = 'bar-arrow';
+            arrow.textContent = v < t.precips[i] ? "↑" : "↓";
+            bar.appendChild(arrow);
+        }
         pRow.appendChild(bar);
     });
 
@@ -298,7 +326,7 @@ function endGame() {
     gameOver = true;
     const overlay = document.getElementById('game-over-overlay');
     const content = document.getElementById('modal-content');
-    
+
     const bestKey = 'best_guesser_min';
     const currentBest = localStorage.getItem(bestKey);
     if (!currentBest || guesses < parseInt(currentBest)) {
