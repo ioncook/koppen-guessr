@@ -192,7 +192,7 @@ function renderGuesses() {
 
         // 1. City Name
         const nameCol = document.createElement('div');
-        nameCol.className = 'column' + (g.id == targetCity.id ? ' exact' : '');
+        nameCol.className = 'column' + (g.name === targetCity.name ? ' exact' : '');
         nameCol.innerHTML = `<span class="val">${g.name.trim()}</span><span class="label">${g.country}</span>`;
         row.appendChild(nameCol);
 
