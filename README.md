@@ -1,6 +1,3 @@
-# KöppenGuessr
-
-A premium climate classification game based on the Köppen-Geiger system.
 
 ## Data Sources
 
@@ -22,4 +19,4 @@ A premium climate classification game based on the Köppen-Geiger system.
 - **Data Guesser**: Deductive reasoning. Find the secret city by comparing its climate data to your guesses.
 
 ---
-Built by [Ion Cook](https://github.com/ioncook) with help from Google DeepMind's Antigravity.
+Built with Antigravity.
