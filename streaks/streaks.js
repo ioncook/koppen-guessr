@@ -5,12 +5,7 @@ let currentCity = null;
 let lastFiltered = [];
 
 function getContrastColor(hex) {
-    if (!hex) return "#fff";
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
-    return hsp > 127.5 ? "#000" : "#fff";
+    return '#000';
 }
 
 // DOM Elements

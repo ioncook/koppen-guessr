@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,7 +53,15 @@
             margin-bottom: 15px;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
         .home-link {
             text-decoration: none;
@@ -66,7 +75,7 @@
         #feedback-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             display: flex;
@@ -74,7 +83,10 @@
             align-items: center;
             z-index: 2000;
         }
-        #feedback-overlay.hidden { display: none; }
+
+        #feedback-overlay.hidden {
+            display: none;
+        }
 
         #dropdown {
             position: absolute;
@@ -87,20 +99,18 @@
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         #modal {
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0a0a0a;
+            border: 1px solid #1f1f1f;
             padding: 40px 40px 10px 40px;
             border-radius: 24px;
             width: 90%;
             max-width: 500px;
             text-align: center;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
         }
 
         .unit-toggle-small {
@@ -113,7 +123,10 @@
             margin-top: 10px;
             justify-content: center;
         }
-        .unit-toggle-small .active { color: var(--accent-color); }
+
+        .unit-toggle-small .active {
+            color: var(--accent-color);
+        }
 
         #stats-row {
             display: flex;
@@ -130,6 +143,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="game-container">
         <header>
@@ -152,15 +166,17 @@
                     </div>
                 </div>
 
-                <p style="color:var(--text-secondary); font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom: 2px;">Identify the Climate</p>
-                
                 <div id="guess-input-container">
-                    <input type="text" id="legend-search" placeholder="Search climate zone (e.g. Af, Desert, Tundra)..." autocomplete="off">
+                    <input type="text" id="legend-search" placeholder="Search climate zone (e.g. Af, Desert, Tundra)..."
+                        autocomplete="off">
                     <div id="dropdown" class="hidden"></div>
                 </div>
 
-                <div id="stats-row" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <span id="round-indicator" style="font-size:0.75rem; font-weight:900; color:var(--text-secondary); letter-spacing: 0.5px;">ROUND 1/5</span>
+                <div id="stats-row"
+                    style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="round-indicator"
+                        style="font-size:0.75rem; font-weight:900; color:var(--text-secondary); letter-spacing: 0.5px;">ROUND
+                        1/5</span>
                     <div id="unit-toggle" class="unit-toggle-small">
                         <span id="unit-metric" class="active">METRIC</span>
                         <span style="color:#222">|</span>
@@ -174,11 +190,13 @@
             <div id="modal">
                 <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 20px;"></h2>
                 <div id="modal-details" style="margin-bottom: 30px;"></div>
-                <button id="modal-btn" class="modal-btn" style="width:100%; background:#222; border:1px solid #333; color:#fff; padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">Continue</button>
+                <button id="modal-btn" class="modal-btn"
+                    style="width:100%; background:#222; border:1px solid #333; color:#fff; padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">Continue</button>
             </div>
         </div>
     </div>
 
     <script src="images.js"></script>
 </body>
+
 </html>

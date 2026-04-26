@@ -48,6 +48,12 @@
             letter-spacing: -2px;
         }
 
+        .hero-logo {
+            height: 4.5rem;
+            width: auto;
+            margin-bottom: 8px;
+        }
+
         .hero p {
             color: var(--text-secondary);
             font-size: 1.2rem;
@@ -139,8 +145,18 @@
         }
 
         @media (max-width: 600px) {
+            .hero {
+                margin-top: 60px;
+                margin-bottom: 30px;
+            }
+
             .hero h1 {
-                font-size: 3rem;
+                font-size: 8.5vw;
+            }
+            
+            .hero-logo {
+                height: 10vw;
+                margin-bottom: 3px;
             }
 
             .modes-grid {
@@ -189,7 +205,7 @@
     </div>
 
     <div class="hero" style="display:flex; align-items:center; justify-content:center; gap:20px;">
-        <img src="logo.png" alt="Logo" style="height: 4.5rem; width: auto;">
+        <img src="logo.png" alt="Logo" class="hero-logo">
         <a href="https://github.com/ioncook/koppen-guessr" style="text-decoration:none; color:inherit;">
             <h1>KöppenGuessr</h1>
         </a>
@@ -249,7 +265,7 @@
             document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
 
             // Images (KM or MI)
-            let bestImages = localStorage.getItem('best_images_min_dist');
+            let bestImages = localStorage.getItem('best_images_min_dist') || localStorage.getItem('best_images_min');
             if (bestImages) {
                 const val = isMetric ? bestImages : Math.round(bestImages * 0.621371);
                 document.getElementById('best-images').textContent = `${val} ${isMetric ? 'KM' : 'MI'}`;

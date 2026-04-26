@@ -9,12 +9,7 @@ let currentUnits = localStorage.getItem('site_units') || 'metric';
  * UTILITY: GET CONTRAST COLOR
  */
 function getContrastColor(hex) {
-    if (!hex) return "#fff";
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
-    return hsp > 127.5 ? "#000" : "#fff";
+    return '#000';
 }
 
 /**
@@ -197,7 +192,7 @@ function renderGuesses() {
 
         // 1. City Name
         const nameCol = document.createElement('div');
-        nameCol.className = 'column';
+        nameCol.className = 'column' + (g.id == targetCity.id ? ' exact' : '');
         nameCol.innerHTML = `<span class="val">${g.name.trim()}</span><span class="label">${g.country}</span>`;
         row.appendChild(nameCol);
 
@@ -372,6 +367,11 @@ function endGame() {
             </div>
         </div>
         <div style="color:var(--text-secondary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">SOLVED IN ${guesses} GUESSES</div>
+        <a href="https://ioncook.github.io/climate-visualizer/?lat=${targetCity.lat}&lng=${targetCity.lng}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&plat=${targetCity.lat}&plng=${targetCity.lng}&p=1" 
+           target="_blank" 
+           style="display: block; margin-top: 20px; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 700; opacity: 0.8;">
+           View on Climate Visualizer →
+        </a>
     `;
 
     overlay.classList.remove('hidden');

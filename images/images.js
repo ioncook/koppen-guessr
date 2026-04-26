@@ -16,12 +16,7 @@ let currentUnits = localStorage.getItem('site_units') || 'metric';
  * UTILITY: GET CONTRAST COLOR (Black or White)
  */
 function getContrastColor(hex) {
-    if (!hex) return "#fff";
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
-    return hsp > 127.5 ? "#000" : "#fff";
+    return '#000';
 }
 
 /**
@@ -201,7 +196,7 @@ function findNearestWithZoneResult(zoneId, targetLat, targetLon) {
             if (d < nearestDist) { nearestDist = d; nearestCity = city; }
         }
     }
-    return { dist: (nearestDist === Infinity ? 0 : nearestDist), city: nearestCity };
+    return { dist: (nearestDist === Infinity ? 20037 : nearestDist), city: nearestCity };
 }
 
 /**
@@ -230,6 +225,8 @@ function submitGuess(zone) {
     sessionHistory.push({
         city: currentCity.city.trim(),
         country: currentCity.country.trim(),
+        lat: currentCity.lat,
+        lng: currentCity.lng,
         dist: roundDist,
         zoneCode: actualCode,
         zoneColor: actualColor,
@@ -286,20 +283,29 @@ function showFinalResults() {
     const displayDist = Math.round(currentUnits === 'metric' ? sessionScore : sessionScore * 0.621371);
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
 
+    const bestKey = 'best_images_min_dist';
+    const currentBest = localStorage.getItem(bestKey);
+    if (!currentBest || sessionScore < parseInt(currentBest)) {
+        localStorage.setItem(bestKey, sessionScore);
+    }
+
     let historyHtml = sessionHistory.map((h, i) => {
         const d = Math.round(currentUnits === 'metric' ? h.dist : h.dist * 0.621371);
+        const visualizerUrl = `https://ioncook.github.io/climate-visualizer/?lat=${h.lat}&lng=${h.lng}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&plat=${h.lat}&plng=${h.lng}&p=1`;
         return `
             <div style="display: grid; grid-template-columns: 25px 1fr 1.5fr auto; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
                 <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i + 1}</span>
                 <div>
-                   <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}</div>
+                   <a href="${visualizerUrl}" target="_blank" style="text-decoration:underline; color:inherit; text-underline-offset: 2px;">
+                        <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}</div>
+                   </a>
                    <div style="display: flex; align-items: center; gap: 6px;">
                         <span style="display:flex; justify-content:center; align-items:center; min-width:32px; height:15px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
                         <a href="${h.imgUrl}" target="_blank" style="color: #333; text-decoration: none; font-size: 0.5rem; font-weight: 800; border: 1px solid #151515; padding: 1px 3px; border-radius: 2px;">IMG ↗</a>
                    </div>
                 </div>
                 <div style="color:var(--text-secondary); font-size: 0.65rem;">
-                   <div style="display:flex; align-items:center; font-weight:800; font-size: 0.5rem; color: #222; margin-bottom: 2px;">Closest <div style="display:flex; justify-content:center; align-items:center; min-width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
+                   <div style="display:flex; align-items:center; font-weight:800; font-size: 0.5rem; color: #555; margin-bottom: 2px;">Closest <div style="display:flex; justify-content:center; align-items:center; min-width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
                    ${h.refCity}
                 </div>
                 <div style="font-weight:900; color:#eee; font-size: 0.85rem;">${d}<span style="color:#333; font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
