@@ -62,6 +62,17 @@ async function init() {
             document.getElementById('game-over-overlay').classList.add('hidden');
         };
 
+        const input = document.getElementById('guess-search');
+        input.focus();
+
+        document.addEventListener('keydown', (e) => {
+            if (gameOver) return;
+            // Focus if typing a single char and not already in an input
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+                input.focus();
+            }
+        });
+
         renderGuesses();
 
     } catch (e) {
@@ -194,9 +205,10 @@ function renderGuesses() {
         const zoneCol = document.createElement('div');
         const matchCount = getZoneMatch(g.code, targetCity.code);
         let accuracy = 'wrong';
-        if (g.id == targetCity.id) accuracy = 'exact';
+
+        if (g.code === targetCity.code) accuracy = 'exact';
         else if (matchCount === 2) accuracy = 'close';
-        else if (matchCount === 1) accuracy = 'close';
+        else if (matchCount === 1) accuracy = 'partial';
 
         const contrast = getContrastColor(g.color);
         zoneCol.className = `column ${accuracy}`;
@@ -204,7 +216,7 @@ function renderGuesses() {
         row.appendChild(zoneCol);
 
         // 3. Precip
-        row.appendChild(createNumericCol("ANNUAL", g.totalPrecip, targetCity.totalPrecip, "precip"));
+        row.appendChild(createNumericCol("ANNUAL PRECIP", g.totalPrecip, targetCity.totalPrecip, "precip"));
 
         // 4. Temp
         row.appendChild(createNumericCol("AVG TEMP", g.avgTemp, targetCity.avgTemp, "temp"));
@@ -217,9 +229,12 @@ function renderGuesses() {
 }
 
 function getZoneMatch(g, t) {
-    if (g[0] === t[0] && g[1] === t[1]) return 2;
-    if (g[0] === t[0]) return 1;
-    return 0;
+    let matches = 0;
+    const len = Math.min(g.length, t.length);
+    for (let i = 0; i < len; i++) {
+        if (g[i] === t[i]) matches++;
+    }
+    return matches;
 }
 
 function createNumericCol(label, gVal, tVal, type) {
@@ -285,6 +300,9 @@ function createChartsCol(g, t) {
             arrow.textContent = v < t.temps[i] ? "↑" : "↓";
             bar.appendChild(arrow);
         }
+
+
+
         tRow.appendChild(bar);
     });
 
@@ -314,6 +332,13 @@ function createChartsCol(g, t) {
             arrow.textContent = v < t.precips[i] ? "↑" : "↓";
             bar.appendChild(arrow);
         }
+
+        const months = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+        const mLabel = document.createElement('div');
+        mLabel.className = 'bar-month';
+        mLabel.textContent = months[i];
+        bar.appendChild(mLabel);
+
         pRow.appendChild(bar);
     });
 

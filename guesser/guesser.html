@@ -72,7 +72,7 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            padding: 10px 4px 6px 4px;
+            padding: 4px 4px 12px 4px;
         }
 
         .spark-row {
@@ -96,6 +96,8 @@
             font-weight: 800;
             opacity: 0.3;
             color: white;
+            z-index: 10;
+            pointer-events: none;
         }
 
         .bar {
@@ -107,6 +109,17 @@
             align-items: center;
             justify-content: flex-start;
             position: relative;
+        }
+
+        .bar-month {
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.45rem;
+            font-weight: 900;
+            color: var(--text-secondary);
+            opacity: 0.5;
         }
 
         .bar-arrow {
@@ -127,6 +140,12 @@
             background: #fbc02d !important;
             border-color: #f9a825 !important;
             color: #000 !important;
+        }
+
+        .partial {
+            background: #e65100 !important;
+            border-color: #ef6c00 !important;
+            color: #fff !important;
         }
 
         .close .label {
