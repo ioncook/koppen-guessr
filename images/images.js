@@ -113,64 +113,86 @@ function findNearestValid(city, all) {
     return best;
 }
 
+let panorama = null;
+let svService = null;
+let lockedPanoId = null;
+
+// Called by Google Maps API once loaded
+window.initStreetView = function () {
+    svService = new google.maps.StreetViewService();
+    panorama = new google.maps.StreetViewPanorama(
+        document.getElementById('streetview-pano'),
+        {
+            disableDefaultUI: true,
+            showRoadLabels: false,
+            clickToGo: false,
+            scrollwheel: true,
+            panControl: false,
+            zoomControl: false,
+            fullscreenControl: false,
+            addressControl: false,
+            linksControl: false,
+            motionTracking: false,
+            motionTrackingControl: false,
+        }
+    );
+
+    // Snap back to locked pano if anything tries to move it
+    panorama.addListener('pano_changed', () => {
+        if (lockedPanoId && panorama.getPano() !== lockedPanoId) {
+            panorama.setPano(lockedPanoId);
+        }
+    });
+};
+
 /**
- * LOAD ROUND IMAGERY
+ * LOAD ROUND — Street View
  */
 async function loadRound() {
     const loader = document.getElementById('load-curtain');
-    const container = document.getElementById('image-container');
     loader.classList.remove('hidden');
-    container.style.backgroundImage = 'none';
 
-    let found = false;
-    let attempts = 0;
+    // Wait for Google Maps API to initialise if not ready yet
+    let waitMs = 0;
+    while (!svService && waitMs < 10000) {
+        await new Promise(r => setTimeout(r, 100));
+        waitMs += 100;
+    }
+    if (!svService) return; // API failed to load
+
     const pool = citiesData.filter(c => (c.population || 0) > 400000);
     const thisRoundId = ++roundId;
+    let found = false;
+    let attempts = 0;
 
-    while (!found && attempts < 50) {
+    while (!found && attempts < 80) {
         attempts++;
         if (thisRoundId !== roundId) return;
+
         const draft = pool[Math.floor(Math.random() * pool.length)];
+
+        // Add random offset up to ~5km so we don't always land at exact city centre
+        const latOffset = (Math.random() - 0.5) * 0.08;
+        const lngOffset = (Math.random() - 0.5) * 0.08;
+        const searchLat = draft.lat + latOffset;
+        const searchLng = draft.lng + lngOffset;
+
         try {
-            const query = `${draft.city}, ${draft.country}`;
-            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(query)}&prop=pageimages|original&format=json&pithumbsize=1024&redirects=1&origin=*`;
-            const resp = await fetch(url);
-            const data = await resp.json();
-            const pages = data.query.pages;
-            const pId = Object.keys(pages)[0];
+            const result = await new Promise((resolve) => {
+                svService.getPanorama(
+                    { location: { lat: searchLat, lng: searchLng }, radius: 5000, source: google.maps.StreetViewSource.OUTDOOR },
+                    (data, status) => resolve({ data, status })
+                );
+            });
 
-            let imgUrl = (pId !== "-1" && pages[pId].original) ? pages[pId].original.source : (pId !== "-1" && pages[pId].thumbnail ? pages[pId].thumbnail.source : null);
-
-            if (!imgUrl) {
-                const fUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(draft.city)}&prop=pageimages|original&format=json&pithumbsize=1024&redirects=1&origin=*`;
-                const fResp = await fetch(fUrl);
-                const fData = await fResp.json();
-                const fPid = Object.keys(fData.query.pages)[0];
-                if (fPid !== "-1") imgUrl = (fData.query.pages[fPid].original) ? fData.query.pages[fPid].original.source : (fData.query.pages[fPid].thumbnail ? fData.query.pages[fPid].thumbnail.source : null);
-            }
-
-            // STRICTOR BLACKLIST
-            const badTerms = ['montage', 'mosaic', 'collage', 'gallery', 'collection', 'night', 'at_night', 'blue_hour', 'midnight', 'evening', 'map', 'locator', 'location', 'district', 'region', 'scheme', 'diagram'];
-            if (imgUrl && badTerms.some(term => imgUrl.toLowerCase().includes(term))) imgUrl = null;
-
-            if (imgUrl && thisRoundId === roundId) {
-                await new Promise((resolve) => {
-                    const testImg = new Image();
-                    testImg.src = imgUrl;
-                    testImg.onload = () => {
-                        if (thisRoundId === roundId) {
-                            currentCity = draft;
-                            currentCity.activeImg = imgUrl;
-                            container.style.backgroundImage = `url(${imgUrl})`;
-                            loader.classList.add('hidden');
-                            document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
-                            document.getElementById('legend-search').focus();
-                            found = true;
-                        }
-                        resolve();
-                    };
-                    testImg.onerror = () => resolve();
-                });
+            if (result.status === google.maps.StreetViewStatus.OK && thisRoundId === roundId) {
+                lockedPanoId = result.data.location.pano;
+                panorama.setPano(lockedPanoId);
+                panorama.setVisible(true);
+                currentCity = draft;
+                loader.classList.add('hidden');
+                document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
+                found = true;
             }
         } catch (e) { }
     }
@@ -204,9 +226,6 @@ function findNearestWithZoneResult(zoneId, targetLat, targetLon) {
  */
 function submitGuess(zone) {
     if (gameOver) return;
-    filteredPool = []; // CLEAR SEARCH
-    const input = document.getElementById('legend-search');
-    input.blur();
 
     const isCorrect = (zone.id == currentCity.zone);
     const result = isCorrect ? { dist: 0, city: currentCity } : findNearestWithZoneResult(zone.id, currentCity.lat, currentCity.lng);
@@ -297,7 +316,7 @@ function showFinalResults() {
                 <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i + 1}</span>
                 <div>
                    <a href="${visualizerUrl}" target="_blank" style="text-decoration:underline; color:inherit; text-underline-offset: 2px;">
-                        <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}</div>
+                        <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}, ${h.country}</div>
                    </a>
                    <div style="display: flex; align-items: center; gap: 6px;">
                         <span style="display:flex; justify-content:center; align-items:center; min-width:32px; height:15px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
@@ -325,44 +344,64 @@ function showFinalResults() {
     btn.style.display = "none";
 }
 
-function setupInteraction() {
-    const input = document.getElementById('legend-search');
-    const drop = document.getElementById('dropdown');
+function buildZoneGrid() {
+    const grid = document.getElementById('zone-grid');
+    grid.innerHTML = '';
 
-    input.oninput = () => {
-        const q = input.value.toLowerCase().trim();
-        if (q.length < 1) { filteredPool = []; drop.classList.add('hidden'); return; }
-        filteredPool = legendData.filter(l => l.code.toLowerCase().includes(q) || l.description.toLowerCase().includes(q)).slice(0, 10);
-        drop.innerHTML = "";
-        filteredPool.forEach(l => {
-            const contrast = getContrastColor(l.color);
-            const div = document.createElement('div');
-            div.className = 'option';
-            div.style.display = "flex";
-            div.style.alignItems = "center";
-            div.style.gap = "15px";
-            div.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${l.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast}; flex-shrink:0;">${l.code}</div><div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>${l.code}</strong> ${l.description}</div>`;
-            div.onclick = () => { input.value = ""; drop.classList.add('hidden'); submitGuess(l); };
-            drop.appendChild(div);
+    const columns = [
+        { label: 'A',  codes: ['Af', 'Am', 'Aw'] },
+        { label: 'BW', codes: ['BWh', 'BWk'] },
+        { label: 'BS', codes: ['BSh', 'BSk'] },
+        { label: 'Cs', codes: ['Csa', 'Csb', 'Csc'] },
+        { label: 'Cw', codes: ['Cwa', 'Cwb', 'Cwc'] },
+        { label: 'Cf', codes: ['Cfa', 'Cfb', 'Cfc'] },
+        { label: 'Ds', codes: ['Dsa', 'Dsb', 'Dsc'] },
+        { label: 'Dw', codes: ['Dwa', 'Dwb', 'Dwc'] },
+        { label: 'Df', codes: ['Dfa', 'Dfb', 'Dfc'] },
+        { label: 'E',  codes: ['ET', 'EF'] },
+    ];
+
+    // Find the tallest column to normalise row count
+    const maxRows = Math.max(...columns.map(c => c.codes.length));
+
+    columns.forEach(col => {
+        const colDiv = document.createElement('div');
+        colDiv.style.display = 'flex';
+        colDiv.style.flexDirection = 'column';
+        colDiv.style.gap = '3px';
+
+        // Column header label
+        const label = document.createElement('div');
+        label.className = 'zone-col-label';
+        label.textContent = col.label;
+        colDiv.appendChild(label);
+
+        col.codes.forEach(code => {
+            const zone = legendData.find(l => l.code === code);
+            if (!zone) return;
+            const btn = document.createElement('button');
+            btn.className = 'zone-btn';
+            btn.style.background = zone.color;
+            btn.title = zone.description;
+            btn.textContent = code;
+            btn.onclick = () => submitGuess(zone);
+            colDiv.appendChild(btn);
         });
-        drop.classList.toggle('hidden', filteredPool.length === 0);
-    };
 
-    input.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            if (filteredPool.length > 0 && !drop.classList.contains('hidden')) {
-                e.preventDefault();
-                e.stopPropagation();
-                submitGuess(filteredPool[0]);
-                input.value = "";
-                drop.classList.add('hidden');
-            } else {
-                const overlay = document.getElementById('feedback-overlay');
-                if (overlay.classList.contains('hidden')) {
-                    e.preventDefault();
-                }
-            }
+        // Fill empty rows so columns align at the top
+        const empty = maxRows - col.codes.length;
+        for (let i = 0; i < empty; i++) {
+            const spacer = document.createElement('div');
+            spacer.style.flex = '1';
+            colDiv.appendChild(spacer);
         }
-    };
+
+        grid.appendChild(colDiv);
+    });
 }
+
+function setupInteraction() {
+    buildZoneGrid();
+}
+
 start();

@@ -20,7 +20,48 @@
             letter-spacing: 1px;
         }
 
+        .zone-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            margin-top: 8px;
+        }
 
+        .zone-col-label {
+            font-size: 0.45rem;
+            font-weight: 900;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            padding-bottom: 3px;
+        }
+
+        .zone-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 2px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            color: #000;
+            width: 100%;
+        }
+
+        .zone-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            z-index: 2;
+            position: relative;
+        }
+
+        .zone-btn:active {
+            transform: scale(0.96);
+        }
     </style>
 </head>
 
@@ -46,15 +87,12 @@
                         <span id="admin-country"></span>
                     </h3>
                 </div>
-                <div id="game-area">
-                    <p style="color:var(--text-secondary); font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom: 2px;">Identify the Climate</p>
-
-                    <div id="guess-input-container">
-                        <input type="text" id="guess-search" placeholder="Search climate zone (e.g. Af, Cfb, Desert)..."
-                            autocomplete="off">
-                        <div id="dropdown-options" class="hidden"></div>
+                    <div id="game-area">
+                        <p style="color:var(--text-secondary); font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom: 2px;">Identify the Climate</p>
+                        <div id="guess-input-container">
+                            <div class="zone-grid" id="zone-grid"></div>
+                        </div>
                     </div>
-                </div>
             </div>
         </main>
 

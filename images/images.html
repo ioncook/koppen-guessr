@@ -23,12 +23,16 @@
             width: 100%;
             height: 380px;
             background-color: #000;
-            background-size: cover;
-            background-position: center;
             border-radius: 8px;
-            margin-bottom: 25px;
+            margin-bottom: 8px;
             position: relative;
             border: 1px solid #222;
+            overflow: hidden;
+        }
+
+        #streetview-pano {
+            width: 100%;
+            height: 100%;
         }
 
         #load-curtain {
@@ -139,7 +143,49 @@
 
         #guess-input-container {
             position: relative;
-            margin-top: 20px;
+            margin-top: 5px;
+        }
+
+        .zone-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+        }
+
+        .zone-col-label {
+            font-size: 0.45rem;
+            font-weight: 900;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            padding-bottom: 3px;
+        }
+
+        .zone-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 4px;
+            padding: 7.5px 2px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            color: #000;
+            width: 100%;
+        }
+
+        .zone-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            position: relative;
+        }
+
+        .zone-btn:active {
+            transform: scale(0.96);
         }
     </style>
 </head>
@@ -160,16 +206,15 @@
         <main>
             <div class="card" style="padding-bottom: 15px;">
                 <div id="image-container">
+                    <div id="streetview-pano"></div>
                     <div id="load-curtain">
                         <div class="spinner"></div>
-                        <p style="color:var(--text-secondary); font-size: 0.8rem;">Retrieving location imagery...</p>
+                        <p style="color:var(--text-secondary); font-size: 0.8rem;">Loading Street View...</p>
                     </div>
                 </div>
 
                 <div id="guess-input-container">
-                    <input type="text" id="legend-search" placeholder="Search climate zone (e.g. Af, Desert, Tundra)..."
-                        autocomplete="off">
-                    <div id="dropdown" class="hidden"></div>
+                    <div class="zone-grid" id="zone-grid"></div>
                 </div>
 
                 <div id="stats-row"
@@ -196,6 +241,9 @@
         </div>
     </div>
 
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEmxm4qy5SK05sh4XLcrXeLYkYbAr8ZGM&callback=initStreetView"
+        async defer></script>
     <script src="images.js"></script>
 </body>
 
