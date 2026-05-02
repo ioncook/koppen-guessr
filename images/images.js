@@ -7,7 +7,8 @@ let sessionScore = 0;
 let gameOver = false;
 let roundId = 0;
 let sessionHistory = [];
-let filteredPool = []; // For search synchronization
+let filteredPool = [];
+let roundLoaded = false;
 
 // Global Unit Preference
 let currentUnits = localStorage.getItem('site_units') || 'metric';
@@ -151,6 +152,7 @@ window.initStreetView = function () {
 async function loadRound() {
     const loader = document.getElementById('load-curtain');
     loader.classList.remove('hidden');
+    roundLoaded = false;
 
     // Wait for Google Maps API to initialise if not ready yet
     let waitMs = 0;
@@ -192,6 +194,7 @@ async function loadRound() {
                 currentCity = draft;
                 loader.classList.add('hidden');
                 document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
+                roundLoaded = true;
                 found = true;
             }
         } catch (e) { }
@@ -225,7 +228,7 @@ function findNearestWithZoneResult(zoneId, targetLat, targetLon) {
  * SUBMIT guess
  */
 function submitGuess(zone) {
-    if (gameOver) return;
+    if (gameOver || !roundLoaded) return;
 
     const isCorrect = (zone.id == currentCity.zone);
     const result = isCorrect ? { dist: 0, city: currentCity } : findNearestWithZoneResult(zone.id, currentCity.lat, currentCity.lng);
@@ -320,7 +323,7 @@ function showFinalResults() {
                    </a>
                    <div style="display: flex; align-items: center; gap: 6px;">
                         <span style="display:flex; justify-content:center; align-items:center; min-width:32px; height:15px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
-                        <a href="${h.imgUrl}" target="_blank" style="color: #333; text-decoration: none; font-size: 0.5rem; font-weight: 800; border: 1px solid #151515; padding: 1px 3px; border-radius: 2px;">IMG ↗</a>
+                        <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${h.lat},${h.lng}" target="_blank" style="color: #333; text-decoration: none; font-size: 0.5rem; font-weight: 800; border: 1px solid #151515; padding: 1px 3px; border-radius: 2px;">STREET VIEW ↗</a>
                    </div>
                 </div>
                 <div style="color:var(--text-secondary); font-size: 0.65rem;">
