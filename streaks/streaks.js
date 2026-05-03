@@ -2,7 +2,6 @@ let streak = 0;
 let citiesData = [];
 let legendData = [];
 let currentCity = null;
-let lastFiltered = [];
 
 function getContrastColor(hex) {
     return '#000';
@@ -22,24 +21,20 @@ const nextBtn = document.getElementById('next-btn');
  */
 async function init() {
     try {
-        console.log("Initializing...");
         const [citiesResp, legendResp] = await Promise.all([
             fetch('../cities.json'),
             fetch('../legend.json')
         ]);
-        
+
         const rawCities = await citiesResp.json();
-        // Filter by zone and population (>= 100k) using original column name 'population'
         citiesData = rawCities.filter(c => c.zone > 0 && (c.population || 0) >= 100000);
         legendData = await legendResp.json();
-        
-        console.log(`Loaded ${citiesData.length} cities and ${legendData.length} legend entries.`);
-        
+
         loadNewCity();
-        setupSearch();
+        setupKeyboard();
     } catch (e) {
-        console.error("Initialization error:", e);
-        cityName.textContent = "Error loading data.";
+        console.error('Init error:', e);
+        cityName.textContent = 'Error loading data.';
     }
 }
 
@@ -71,7 +66,7 @@ function buildZoneGrid() {
     grid.innerHTML = '';
 
     const columns = [
-        { label: 'A',  codes: ['Af', 'Am', 'Aw'] },
+        { label: 'A', codes: ['Af', 'Am', 'Aw'] },
         { label: 'BW', codes: ['BWh', 'BWk'] },
         { label: 'BS', codes: ['BSh', 'BSk'] },
         { label: 'Cs', codes: ['Csa', 'Csb', 'Csc'] },
@@ -80,7 +75,7 @@ function buildZoneGrid() {
         { label: 'Ds', codes: ['Dsa', 'Dsb', 'Dsc'] },
         { label: 'Dw', codes: ['Dwa', 'Dwb', 'Dwc'] },
         { label: 'Df', codes: ['Dfa', 'Dfb', 'Dfc'] },
-        { label: 'E',  codes: ['ET', 'EF'] },
+        { label: 'E', codes: ['ET', 'EF'] },
     ];
 
     const maxRows = Math.max(...columns.map(c => c.codes.length));
@@ -117,7 +112,7 @@ function buildZoneGrid() {
     });
 }
 
-function setupSearch() {
+function setupKeyboard() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !feedbackOverlay.classList.contains('hidden')) {
             e.preventDefault();
@@ -132,17 +127,17 @@ function setupSearch() {
  */
 function submitGuess(guess) {
     const correctZone = legendData.find(l => l.id === currentCity.zone);
-    
+
     if (guess.id === currentCity.zone) {
         streak++;
-        feedbackMsg.textContent = "Correct!";
+        feedbackMsg.textContent = `Correct! ${streak} streak`;
         feedbackMsg.style.color = "#388e3c";
         const contrast = getContrastColor(guess.color);
         feedbackDetails.innerHTML = `
             <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
                 <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
-                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CONFIRMED CLIMATE</div>
+                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${guess.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast};">${guess.code}</span>
                     <span style="font-weight: 700; color: #fff;">${guess.description}</span>
@@ -153,13 +148,13 @@ function submitGuess(guess) {
     } else {
         feedbackMsg.textContent = `Streak ended at ${streak}`;
         feedbackMsg.style.color = "#d32f2f";
-        
+
         // Save best score
         const best = parseInt(localStorage.getItem('best_streaks') || 0);
         if (streak > best) localStorage.setItem('best_streaks', streak);
-        
+
         streak = 0;
-        
+
         const actualColor = correctZone ? correctZone.color : "#333";
         const actualCode = correctZone ? correctZone.code : "??";
         const actualDesc = correctZone ? correctZone.description : "Unknown";
@@ -178,7 +173,7 @@ function submitGuess(guess) {
         `;
         nextBtn.textContent = "Restart Streak";
     }
-    
+
     streakVal.textContent = streak;
     feedbackOverlay.classList.remove('hidden');
 }
@@ -191,7 +186,7 @@ function getFlagEmoji(countryCode) {
     const codePoints = countryCode
         .toUpperCase()
         .split('')
-        .map(char =>  127397 + char.charCodeAt(0));
+        .map(char => 127397 + char.charCodeAt(0));
     return String.fromCodePoint(...codePoints);
 }
 

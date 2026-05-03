@@ -7,7 +7,6 @@ let sessionScore = 0;
 let gameOver = false;
 let roundId = 0;
 let sessionHistory = [];
-let filteredPool = [];
 let roundLoaded = false;
 
 // Global Unit Preference
@@ -32,16 +31,7 @@ async function start() {
         const allCities = await cResp.json();
         legendData = await lResp.json();
 
-        citiesData = allCities.filter(c => c.zone > 0).map(c => {
-            if (isDataDead(c)) {
-                const near = findNearestValid(c, allCities);
-                if (near) {
-                    c.temp = near.temp;
-                    c.precip = near.precip;
-                }
-            }
-            return c;
-        });
+        citiesData = allCities.filter(c => c.zone > 0);
 
         setupInteraction();
         loadRound();
@@ -98,21 +88,6 @@ function updateScoreDisplay() {
     document.getElementById('session-score').textContent = `${displayDist} ${unitLabel}`;
 }
 
-function isDataDead(c) {
-    if (!c.temp || c.temp.length < 1) return true;
-    return c.temp.every(t => t === 0);
-}
-
-function findNearestValid(city, all) {
-    let best = null;
-    let minDist = Infinity;
-    const pool = all.filter(c => (c.population || 0) > 300000 && !isDataDead(c)).slice(0, 500);
-    for (const other of pool) {
-        const d = Math.pow(city.lat - other.lat, 2) + Math.pow(city.lng - other.lng, 2);
-        if (d < minDist) { minDist = d; best = other; }
-    }
-    return best;
-}
 
 let panorama = null;
 let svService = null;
@@ -253,12 +228,10 @@ function submitGuess(zone) {
         zoneCode: actualCode,
         zoneColor: actualColor,
         zoneContrast: actualContrast,
-        guessedId: zone.id,
         guessedCode: zone.code,
         guessedColor: zone.color,
         guessedContrast: getContrastColor(zone.color),
         refCity: refCity ? `${refCity.city.trim()}, ${refCity.country.trim()}` : "Global Registry",
-        imgUrl: currentCity.activeImg
     });
 
     const titleEl = document.getElementById('modal-title');
@@ -369,9 +342,7 @@ function buildZoneGrid() {
 
     columns.forEach(col => {
         const colDiv = document.createElement('div');
-        colDiv.style.display = 'flex';
-        colDiv.style.flexDirection = 'column';
-        colDiv.style.gap = '3px';
+        colDiv.style.cssText = 'display:flex; flex-direction:column; gap:3px;';
 
         // Column header label
         const label = document.createElement('div');
