@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Guessr - Images</title>
+    <title>Climate Guessr - Photo Sphere</title>
     <link rel="icon" type="image/png" href="../favicon.png">
     <link rel="stylesheet" href="../streaks/streaks.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -143,13 +143,13 @@
 
         #guess-input-container {
             position: relative;
-            margin-top: 5px;
         }
 
         .zone-grid {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 3px;
+            margin-top: 8px;
         }
 
         .zone-col-label {
@@ -166,13 +166,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 1rem;
             font-weight: 900;
             border: none;
-            border-radius: 4px;
-            padding: 7.5px 2px;
+            border-radius: 6px;
+            padding: 11px 1px;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: transform 0.05s, box-shadow 0.05s;
             color: #000;
             width: 100%;
         }
@@ -195,16 +195,22 @@
         <header>
             <div style="display:flex; align-items:center;">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Images</h1>
+                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Photo Sphere</h1>
             </div>
-            <div id="stats">
-                <span id="streak-label" style="letter-spacing: 2px;">GAME DISTANCE</span>
-                <span id="session-score">0 KM</span>
+            <div style="display: flex; gap: 10px;">
+                <div class="stat-box">
+                    <span class="stat-label" style="letter-spacing: 2px;">ROUND</span>
+                    <span id="round-indicator-val">1/5</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label" style="letter-spacing: 2px;">DISTANCE</span>
+                    <span id="session-score">0 KM</span>
+                </div>
             </div>
         </header>
 
         <main>
-            <div class="card" style="padding-bottom: 15px;">
+            <div class="card">
                 <div id="image-container">
                     <div id="streetview-pano"></div>
                     <div id="load-curtain">
@@ -216,18 +222,7 @@
                 <div id="guess-input-container">
                     <div class="zone-grid" id="zone-grid"></div>
                 </div>
-
-                <div id="stats-row"
-                    style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <span id="round-indicator"
-                        style="font-size:0.75rem; font-weight:900; color:var(--text-secondary); letter-spacing: 0.5px;">ROUND
-                        1/5</span>
-                    <div id="unit-toggle" class="unit-toggle-small">
-                        <span id="unit-metric" class="active">METRIC</span>
-                        <span style="color:#222">|</span>
-                        <span id="unit-imperial">IMPERIAL</span>
-                    </div>
-                </div>
+                <div id="tooltip" class="tooltip"></div>
             </div>
         </main>
 
@@ -241,7 +236,7 @@
         </div>
     </div>
 
-    <script src="images.js"></script>
+    <script src="photosphere.js"></script>
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEmxm4qy5SK05sh4XLcrXeLYkYbAr8ZGM&callback=initStreetView"></script>
 </body>

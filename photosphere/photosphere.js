@@ -67,19 +67,15 @@ async function start() {
             }
         });
 
-        document.getElementById('unit-toggle').onclick = () => {
-            currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
-            localStorage.setItem('site_units', currentUnits);
-            syncUnitUI();
-            updateScoreDisplay();
-        };
+        // Unit Preference handled on homepage
+        syncUnitUI();
+        updateScoreDisplay(); // Fix 0 KM init bug
 
     } catch (e) { console.error("Crash:", e); }
 }
 
 function syncUnitUI() {
-    document.getElementById('unit-metric').classList.toggle('active', currentUnits === 'metric');
-    document.getElementById('unit-imperial').classList.toggle('active', currentUnits === 'imperial');
+    // No unit toggle UI on this page
 }
 
 function updateScoreDisplay() {
@@ -168,7 +164,7 @@ async function loadRound() {
                 panorama.setVisible(true);
                 currentCity = draft;
                 loader.classList.add('hidden');
-                document.getElementById('round-indicator').textContent = `ROUND ${currentRound}/${maxRounds}`;
+                document.getElementById('round-indicator-val').textContent = `${currentRound}/${maxRounds}`;
                 roundLoaded = true;
                 found = true;
             }
@@ -260,8 +256,11 @@ function submitGuess(zone) {
     `;
 
     document.getElementById('feedback-overlay').classList.remove('hidden');
+    const modalBtn = document.getElementById('modal-btn');
+    modalBtn.style.borderRadius = "12px";
+    modalBtn.style.marginTop = "10px";
     if (currentRound === maxRounds) {
-        document.getElementById('modal-btn').textContent = "View Final Results";
+        modalBtn.textContent = "View Final Results";
     }
 }
 
@@ -272,14 +271,14 @@ function showFinalResults() {
     const modal = document.getElementById('modal');
 
     modal.style.maxWidth = "600px";
-    title.innerHTML = `Results`;
+    title.innerHTML = `Photo Sphere Results`;
     title.style.color = "#fff";
 
     const displayDist = Math.round(currentUnits === 'metric' ? sessionScore : sessionScore * 0.621371);
     const unitLabel = currentUnits === 'metric' ? 'KM' : 'MI';
 
-    const bestKey = 'best_images_min_dist';
-    const currentBest = localStorage.getItem(bestKey);
+    const bestKey = 'best_photosphere_min_dist';
+    const currentBest = localStorage.getItem(bestKey) || localStorage.getItem('best_images_min_dist');
     if (!currentBest || sessionScore < parseInt(currentBest)) {
         localStorage.setItem(bestKey, sessionScore);
     }
@@ -314,8 +313,10 @@ function showFinalResults() {
             <div style="font-size: 3.5rem; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -2px;">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: #444; margin-left: 5px;">${unitLabel}</span></div>
             <div style="color:#555; font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL DISTANCE</div>
         </div>
-        <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:30px;">New Game</button>
-        <a href="../index.html" style="display: block; margin-top: 15px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 700; text-align: center;">Back to Home</a>
+        <div style="padding-bottom: 20px;">
+            <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:12px;">New Game</button>
+        </div>
+        <a href="../index.html" style="display: block; margin-top: 5px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 700; text-align: center;">Back to Home</a>
     `;
     btn.style.display = "none";
 }
@@ -356,8 +357,20 @@ function buildZoneGrid() {
             const btn = document.createElement('button');
             btn.className = 'zone-btn';
             btn.style.background = zone.color;
-            btn.title = zone.description;
             btn.textContent = code;
+            
+            // Floating Tooltip logic
+            btn.onmouseover = (e) => {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.innerHTML = `<span style="color:${zone.color}">${code}</span>: ${zone.description}`;
+                tooltip.classList.add('visible');
+                updateTooltipPos(e);
+            };
+            btn.onmousemove = (e) => updateTooltipPos(e);
+            btn.onmouseout = () => {
+                document.getElementById('tooltip').classList.remove('visible');
+            };
+
             btn.onclick = () => submitGuess(zone);
             colDiv.appendChild(btn);
         });
@@ -376,6 +389,15 @@ function buildZoneGrid() {
 
 function setupInteraction() {
     buildZoneGrid();
+}
+
+function updateTooltipPos(e) {
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+    const x = e.clientX + 15;
+    const y = e.clientY - 40;
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
 }
 
 start();

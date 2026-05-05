@@ -212,7 +212,7 @@
     </div>
 
     <div class="modes-grid">
-        <a href="streaks/streaks.html" class="mode-card">
+        <a href="streaks/" class="mode-card">
 
             <div class="mode-icon">🔥</div>
             <div class="mode-title">Streaks</div>
@@ -220,16 +220,15 @@
             <div class="best-score">Best Streak: <strong id="best-streaks">0</strong></div>
         </a>
 
-        <a href="images/images.html" class="mode-card">
-
+        <a href="photosphere/" class="mode-card">
             <div class="mode-icon">🖼️</div>
-            <div class="mode-title">Images</div>
-            <div class="mode-desc">Guess the Köppen zone from an image sphere. 5 rounds per game, aim for zero distance.
+            <div class="mode-title">Photo Sphere</div>
+            <div class="mode-desc">Guess the Köppen zone from a photo sphere. 5 rounds per game, aim for zero distance.
             </div>
-            <div class="best-score">Min Distance: <strong id="best-images">---</strong></div>
+            <div class="best-score">Min Distance: <strong id="best-photosphere">---</strong></div>
         </a>
 
-        <a href="guesser/guesser.html" class="mode-card">
+        <a href="guesser/" class="mode-card">
 
             <div class="mode-icon">🔭</div>
             <div class="mode-title">Data Guesser</div>
@@ -265,13 +264,13 @@
             // Streaks (Just a number)
             document.getElementById('best-streaks').textContent = localStorage.getItem('best_streaks') || 0;
 
-            // Images (KM or MI)
-            let bestImages = localStorage.getItem('best_images_min_dist') || localStorage.getItem('best_images_min');
-            if (bestImages) {
-                const val = isMetric ? bestImages : Math.round(bestImages * 0.621371);
-                document.getElementById('best-images').textContent = `${val} ${isMetric ? 'KM' : 'MI'}`;
+            // Photo Sphere (KM or MI)
+            let bestPhotoSphere = localStorage.getItem('best_photosphere_min_dist') || localStorage.getItem('best_images_min_dist') || localStorage.getItem('best_images_min');
+            if (bestPhotoSphere) {
+                const val = isMetric ? bestPhotoSphere : Math.round(bestPhotoSphere * 0.621371);
+                document.getElementById('best-photosphere').textContent = `${val} ${isMetric ? 'KM' : 'MI'}`;
             } else {
-                document.getElementById('best-images').textContent = '---';
+                document.getElementById('best-photosphere').textContent = '---';
             }
 
             // Guesser (Just a number)

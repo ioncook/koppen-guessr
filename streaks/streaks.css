@@ -48,7 +48,7 @@ header h1 {
     letter-spacing: -1px;
 }
 
-#stats {
+.stat-box {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -58,7 +58,7 @@ header h1 {
     border: 1px solid var(--border-color);
 }
 
-#streak-label {
+.stat-label {
     font-size: 0.65rem;
     font-weight: 700;
     color: var(--text-secondary);
@@ -66,7 +66,7 @@ header h1 {
     letter-spacing: 0.5px;
 }
 
-#streak-value, #session-score {
+#streak-value, #session-score, #round-indicator-val {
     font-size: 1.3rem;
     font-weight: 800;
 }
@@ -233,4 +233,29 @@ input[type="text"]:focus {
 
 #unit-toggle .active, #unit-toggle-small .active {
     color: #fff;
+}
+
+/* FLOATING TOOLTIP */
+.tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid #333;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #fff;
+    z-index: 5000;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.05s, transform 0.05s;
+}
+.tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
 }

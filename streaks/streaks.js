@@ -95,8 +95,20 @@ function buildZoneGrid() {
             const btn = document.createElement('button');
             btn.className = 'zone-btn';
             btn.style.background = zone.color;
-            btn.title = zone.description;
             btn.textContent = code;
+
+            // Floating Tooltip logic
+            btn.onmouseover = (e) => {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.innerHTML = `<span style="color:${zone.color}">${code}</span>: ${zone.description}`;
+                tooltip.classList.add('visible');
+                updateTooltipPos(e);
+            };
+            btn.onmousemove = (e) => updateTooltipPos(e);
+            btn.onmouseout = () => {
+                document.getElementById('tooltip').classList.remove('visible');
+            };
+
             btn.onclick = () => submitGuess(zone);
             colDiv.appendChild(btn);
         });
@@ -110,6 +122,15 @@ function buildZoneGrid() {
 
         grid.appendChild(colDiv);
     });
+}
+
+function updateTooltipPos(e) {
+    const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+    const x = e.clientX + 15;
+    const y = e.clientY - 40;
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
 }
 
 function setupKeyboard() {

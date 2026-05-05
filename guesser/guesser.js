@@ -45,13 +45,7 @@ async function init() {
         setupSearch();
         syncUnits();
 
-        // Unit Toggle
-        document.getElementById('unit-toggle-small').onclick = () => {
-            currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
-            localStorage.setItem('site_units', currentUnits);
-            syncUnits();
-            renderGuesses();
-        };
+        syncUnits();
 
         document.getElementById('view-guesses-btn').onclick = () => {
             document.getElementById('game-over-overlay').classList.add('hidden');
