@@ -175,6 +175,9 @@
             transition: transform 0.05s, box-shadow 0.05s;
             color: #000;
             width: 100%;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
 
         .zone-btn:hover {
@@ -193,19 +196,13 @@
 <body>
     <div id="game-container">
         <header>
-            <div style="display:flex; align-items:center;">
+            <div class="header-left">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Photo Sphere</h1>
+                <h1 style="font-weight: 800; letter-spacing: -1px;">Photo Sphere</h1>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="stat-box">
-                    <span class="stat-label" style="letter-spacing: 2px;">ROUND</span>
-                    <span id="round-indicator-val">1/5</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label" style="letter-spacing: 2px;">DISTANCE</span>
-                    <span id="session-score">0 KM</span>
-                </div>
+            <div class="header-stats">
+                <div>ROUND <span id="round-indicator-val">1/5</span></div>
+                <div>DISTANCE <span id="session-score">0 KM</span></div>
             </div>
         </header>
 

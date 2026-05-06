@@ -50,6 +50,9 @@
             transition: transform 0.05s, box-shadow 0.05s;
             color: #000;
             width: 100%;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
 
         .zone-btn:hover {
@@ -68,13 +71,12 @@
 <body>
     <div id="game-container">
         <header>
-            <div style="display:flex; align-items:center;">
+            <div class="header-left">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Streaks</h1>
+                <h1 style="font-weight: 800; letter-spacing: -1px;">Streaks</h1>
             </div>
-            <div class="stat-box">
-                <span class="stat-label">STREAK</span>
-                <span id="streak-value">0</span>
+            <div class="header-stats">
+                <div>STREAK <span id="streak-value">0</span></div>
             </div>
         </header>
 

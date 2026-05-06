@@ -269,21 +269,22 @@
 <body>
     <div id="game-container">
         <header>
-            <div style="display:flex; align-items:center;">
+            <div class="header-left">
                 <a href="../index.html" class="home-link">← Home</a>
-                <h1 style="margin-left: 20px; font-weight: 800; letter-spacing: -1px;">Data Guesser</h1>
-            </div>
-            <div id="stats">
-                <span id="streak-label">TOTAL GUESSES</span>
-                <span id="streak-value">0</span>
+                <h1 style="font-weight: 800; letter-spacing: -1px;">Data Guesser</h1>
             </div>
         </header>
 
         <main>
             <div class="card" style="padding-bottom: 20px;">
-                <p id="instruction-text"
-                    style="color:var(--text-secondary); font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
-                    Guess the city</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+                    <p id="instruction-text"
+                        style="color:var(--text-secondary); font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin: 0;">
+                        Guess the city</p>
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary);">
+                        GUESSES <span id="streak-value" style="color: #fff; margin-left: 5px;">0</span>
+                    </div>
+                </div>
                 <div class="search-area">
                     <input type="text" id="guess-search" placeholder="Type a city name..." autocomplete="off">
                     <div id="dropdown-options" class="hidden"></div>

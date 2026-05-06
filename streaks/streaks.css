@@ -39,6 +39,14 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 header h1 {
@@ -46,6 +54,45 @@ header h1 {
     font-weight: 700;
     color: var(--accent-color);
     letter-spacing: -1px;
+    margin: 0;
+}
+
+.header-stats {
+    display: flex; 
+    gap: 20px; 
+    align-items: center; 
+    font-size: 0.8rem; 
+    font-weight: 800; 
+    color: var(--text-secondary);
+}
+
+.header-stats span {
+    color: #fff;
+    margin-left: 5px;
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 1.2rem;
+    }
+    .home-link {
+        font-size: 0.65rem;
+    }
+    .header-left {
+        gap: 10px;
+    }
+    .header-stats {
+        font-size: 0.75rem;
+        gap: 12px;
+        font-weight: 800;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .header-stats span {
+        color: #fff;
+        margin-left: 4px;
+    }
 }
 
 .stat-box {

@@ -256,6 +256,7 @@ function submitGuess(zone) {
     `;
 
     document.getElementById('feedback-overlay').classList.remove('hidden');
+    document.getElementById('tooltip').classList.remove('visible');
     const modalBtn = document.getElementById('modal-btn');
     modalBtn.style.borderRadius = "12px";
     modalBtn.style.marginTop = "10px";
@@ -359,7 +360,8 @@ function buildZoneGrid() {
             btn.style.background = zone.color;
             btn.textContent = code;
             
-            // Floating Tooltip logic
+            // Tooltip — desktop only
+            const hideT = () => document.getElementById('tooltip').classList.remove('visible');
             btn.onmouseover = (e) => {
                 const tooltip = document.getElementById('tooltip');
                 tooltip.innerHTML = `<span style="color:${zone.color}">${code}</span>: ${zone.description}`;
@@ -367,11 +369,9 @@ function buildZoneGrid() {
                 updateTooltipPos(e);
             };
             btn.onmousemove = (e) => updateTooltipPos(e);
-            btn.onmouseout = () => {
-                document.getElementById('tooltip').classList.remove('visible');
-            };
+            btn.onmouseout = hideT;
 
-            btn.onclick = () => submitGuess(zone);
+            btn.onclick = () => { hideT(); submitGuess(zone); };
             colDiv.appendChild(btn);
         });
 
