@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Guessr - Photo Sphere</title>
+    <title>KöppenGuessr | Photo Sphere</title>
     <link rel="icon" type="image/png" href="../favicon.png">
     <link rel="stylesheet" href="../streaks/streaks.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -204,15 +204,19 @@
                 overflow: hidden;
                 padding: 0;
             }
+
             #game-container {
                 display: contents;
             }
+
             main {
                 display: contents;
             }
+
             .card {
                 display: contents;
             }
+
             #image-container {
                 position: fixed;
                 inset: 0;
@@ -223,9 +227,11 @@
                 border: none;
                 z-index: 1;
             }
+
             #load-curtain {
                 border-radius: 0;
             }
+
             header {
                 position: fixed;
                 top: 20px;
@@ -234,7 +240,9 @@
                 z-index: 10;
                 pointer-events: none;
             }
-            .header-left, .header-stats {
+
+            .header-left,
+            .header-stats {
                 pointer-events: auto;
                 background: rgba(10, 10, 10, 0.75);
                 backdrop-filter: blur(12px);
@@ -243,11 +251,13 @@
                 padding: 12px 20px;
                 border-radius: 12px;
             }
+
             .header-left {
                 display: flex;
                 align-items: center;
                 gap: 15px;
             }
+
             #guess-input-container {
                 position: fixed;
                 bottom: 20px;
@@ -262,6 +272,7 @@
                 width: auto;
                 max-width: 500px;
             }
+
             .zone-grid {
                 margin-top: 0;
             }
