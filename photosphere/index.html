@@ -113,8 +113,16 @@
             border-radius: 24px;
             width: 90%;
             max-width: 500px;
+            max-height: calc(100dvh - 40px);
+            overflow-y: auto;
             text-align: center;
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #modal::-webkit-scrollbar {
+            display: none;
         }
 
         .unit-toggle-small {
@@ -189,6 +197,74 @@
 
         .zone-btn:active {
             transform: scale(0.96);
+        }
+
+        @media (min-width: 601px) {
+            body {
+                overflow: hidden;
+                padding: 0;
+            }
+            #game-container {
+                display: contents;
+            }
+            main {
+                display: contents;
+            }
+            .card {
+                display: contents;
+            }
+            #image-container {
+                position: fixed;
+                inset: 0;
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                margin-bottom: 0;
+                border: none;
+                z-index: 1;
+            }
+            #load-curtain {
+                border-radius: 0;
+            }
+            header {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                z-index: 10;
+                pointer-events: none;
+            }
+            .header-left, .header-stats {
+                pointer-events: auto;
+                background: rgba(10, 10, 10, 0.75);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid var(--border-color);
+                padding: 12px 20px;
+                border-radius: 12px;
+            }
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            #guess-input-container {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                z-index: 10;
+                background: rgba(10, 10, 10, 0.75);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 15px;
+                width: auto;
+                max-width: 500px;
+            }
+            .zone-grid {
+                margin-top: 0;
+            }
         }
     </style>
 </head>
