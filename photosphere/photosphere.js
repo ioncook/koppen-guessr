@@ -238,19 +238,19 @@ function submitGuess(zone) {
     const distToDisplay = Math.round(currentUnits === 'metric' ? roundDist : roundDist * 0.621371);
 
     document.getElementById('modal-details').innerHTML = `
-        <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
-            <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
-            <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
+        <div class="modal-detail-card">
+            <div class="modal-detail-label">LOCATION</div>
+            <div class="modal-detail-value">${currentCity.city.trim()}, ${currentCity.country}</div>
+            <div class="modal-detail-label">CORRECT CLIMATE</div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span class="climate-pill" style="background: ${actualColor}; color: ${actualContrast}">${actualCode}</span>
-                <span style="font-weight: 700; color: #fff;">${actualStr}</span>
+                <span class="modal-climate-name">${actualStr}</span>
             </div>
         </div>
-        <div style="text-align: left; padding: 0 10px; margin-bottom: 20px;">
-             <div style="font-weight: 800; color: #ababab; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">GAP: ${distToDisplay} ${unitLabel}</div>
-             <div style="font-size: 0.63rem; color: #555; font-weight: 800; display:flex; align-items:center;">
-                CLOSEST <span style="display:inline-flex; justify-content:center; align-items:center; min-width:35px; height:16px; background:${zone.color}; color:${getContrastColor(zone.color)}; border-radius:3px; margin:0 6px; font-size:0.55rem; font-weight:900;">${zone.code}</span> MATCH: <span style="color: #666; margin-left: 5px;">${refCity ? refCity.city.trim() + ', ' + refCity.country.trim() : "N/A"}</span>
+        <div style="text-align: left; padding: 0 10px; margin: 24px 0;">
+             <div class="modal-gap-label">GAP: ${distToDisplay} ${unitLabel}</div>
+             <div class="modal-closest-text">
+                CLOSEST <span style="display:inline-flex; justify-content:center; align-items:center; min-width:35px; height:16px; background:${zone.color}; color:${getContrastColor(zone.color)}; border-radius:3px; margin:0 6px; font-size:0.55rem; font-weight:900;">${zone.code}</span> MATCH: <span class="modal-closest-city">${refCity ? refCity.city.trim() + ', ' + refCity.country.trim() : "N/A"}</span>
              </div>
         </div>
     `;
@@ -258,8 +258,8 @@ function submitGuess(zone) {
     document.getElementById('feedback-overlay').classList.remove('hidden');
     document.getElementById('tooltip').classList.remove('visible');
     const modalBtn = document.getElementById('modal-btn');
-    modalBtn.style.borderRadius = "12px";
-    modalBtn.style.marginTop = "10px";
+    modalBtn.style.borderRadius = "4px";
+    modalBtn.style.marginTop = "0px";
     if (currentRound === maxRounds) {
         modalBtn.textContent = "View Final Results";
     }
@@ -286,24 +286,26 @@ function showFinalResults() {
 
     let historyHtml = sessionHistory.map((h, i) => {
         const d = Math.round(currentUnits === 'metric' ? h.dist : h.dist * 0.621371);
-        const visualizerUrl = `https://ioncook.github.io/climate-visualizer/?lat=${h.lat}&lng=${h.lng}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&plat=${h.lat}&plng=${h.lng}&p=1`;
+        const latFixed = Number(h.lat).toFixed(4);
+        const lngFixed = Number(h.lng).toFixed(4);
+        const visualizerUrl = `https://ioncook.github.io/climate-visualizer/?lat=${latFixed}&lng=${lngFixed}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&p=${latFixed},${lngFixed}`;
         return `
-            <div style="display: grid; grid-template-columns: 25px 1fr 1.5fr auto; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; text-align: left;">
-                <span style="font-weight:900; color:#222; font-size: 0.7rem;">0${i + 1}</span>
+            <div class="modal-history-row">
+                <span class="modal-history-num">0${i + 1}</span>
                 <div>
                    <a href="${visualizerUrl}" target="_blank" style="text-decoration:underline; color:inherit; text-underline-offset: 2px;">
-                        <div style="font-weight:700; color:#eee; font-size: 0.8rem; margin-bottom:2px;">${h.city}, ${h.country}</div>
+                        <div class="modal-history-city">${h.city}, ${h.country}</div>
                    </a>
                    <div style="display: flex; align-items: center; gap: 6px;">
                         <span style="display:flex; justify-content:center; align-items:center; min-width:32px; height:15px; background:${h.zoneColor}; border-radius:3px; font-size:0.55rem; font-weight:900; color:${h.zoneContrast}">${h.zoneCode}</span>
-                        <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${h.lat},${h.lng}" target="_blank" style="color: #333; text-decoration: none; font-size: 0.5rem; font-weight: 800; border: 1px solid #151515; padding: 1px 3px; border-radius: 2px;">STREET VIEW ↗</a>
+                        <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${h.lat},${h.lng}" target="_blank" class="modal-street-link">STREET VIEW ↗</a>
                    </div>
                 </div>
                 <div style="color:var(--text-secondary); font-size: 0.65rem;">
-                   <div style="display:flex; align-items:center; font-weight:800; font-size: 0.5rem; color: #555; margin-bottom: 2px;">Closest <div style="display:flex; justify-content:center; align-items:center; min-width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
+                   <div style="display:flex; align-items:center; font-weight:800; font-size: 0.5rem; color: var(--text-secondary); margin-bottom: 2px;">Closest <div style="display:flex; justify-content:center; align-items:center; min-width:30px; height:12px; background:${h.guessedColor}; color:${h.guessedContrast}; border-radius:2px; margin:0 4px; font-size:0.5rem; font-weight:900;">${h.guessedCode}</div></div>
                    ${h.refCity}
                 </div>
-                <div style="font-weight:900; color:#eee; font-size: 0.85rem;">${d}<span style="color:#333; font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
+                <div class="modal-history-dist">${d}<span style="color:var(--text-secondary); font-size:0.6rem; margin-left:2px">${unitLabel}</span></div>
             </div>
         `;
     }).join('');
@@ -311,11 +313,11 @@ function showFinalResults() {
     details.innerHTML = `
         <div style="margin: 20px 0;">${historyHtml}</div>
         <div style="margin: 30px 0; text-align: center;">
-            <div style="font-size: 3.5rem; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -2px;">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: #444; margin-left: 5px;">${unitLabel}</span></div>
-            <div style="color:#555; font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL DISTANCE</div>
+            <div class="modal-total-dist">${displayDist}<span style="font-size: 1.5rem; letter-spacing: 0; color: var(--text-secondary); margin-left: 5px;">${unitLabel}</span></div>
+            <div style="color:var(--text-secondary); font-size: 0.75rem; font-weight:800; text-transform:uppercase; letter-spacing: 1px;">TOTAL DISTANCE</div>
         </div>
         <div style="padding-bottom: 20px;">
-            <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; background:#fff; border:none; color:#000; padding:15px; border-radius:12px;">New Game</button>
+            <button onclick="location.reload()" class="modal-btn" style="width:100%; font-weight:800; cursor:pointer; padding:15px; border-radius:4px;">New Game</button>
         </div>
         <a href="../index.html" style="display: block; margin-top: 5px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 700; text-align: center;">Back to Home</a>
     `;

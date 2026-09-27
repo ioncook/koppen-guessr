@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KöppenGuessr | Photo Sphere</title>
     <link rel="icon" type="image/png" href="../favicon.png">
+    <script>if (localStorage.getItem('site_theme') === 'light') document.documentElement.classList.add('light-mode');</script>
     <link rel="stylesheet" href="../streaks/streaks.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,11 +20,19 @@
             --text-color: #e0e0e0;
         }
 
+        html.light-mode, body.light-mode {
+            --card-bg: #ffffff;
+            --border-color: #dedede;
+            --accent-color: #444444;
+            --text-secondary: #666;
+            --text-color: #1a1a1a;
+        }
+
         #image-container {
             width: 100%;
             height: 380px;
             background-color: #000;
-            border-radius: 8px;
+            border-radius: 4px;
             margin-bottom: 8px;
             position: relative;
             border: 1px solid #222;
@@ -44,7 +53,7 @@
             justify-content: center;
             align-items: center;
             z-index: 10;
-            border-radius: 8px;
+            border-radius: 4px;
         }
 
         .spinner {
@@ -86,6 +95,40 @@
             justify-content: center;
             align-items: center;
             z-index: 2000;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        #modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 35px 35px 40px 35px;
+            border-radius: 6px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            width: 90%;
+            max-width: 460px;
+            max-height: calc(100dvh - 40px);
+            overflow-y: auto;
+            text-align: center;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html.light-mode #feedback-overlay,
+        body.light-mode #feedback-overlay {
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        html.light-mode #modal,
+        body.light-mode #modal {
+            background: #ffffff;
+            border-color: #d0d0d0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            color: #111;
+        }
+
+        #modal::-webkit-scrollbar {
+            display: none;
         }
 
         #feedback-overlay.hidden {
@@ -99,30 +142,11 @@
             right: 0;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 4px;
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        #modal {
-            background: #0a0a0a;
-            border: 1px solid #1f1f1f;
-            padding: 40px 40px 10px 40px;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 500px;
-            max-height: calc(100dvh - 40px);
-            overflow-y: auto;
-            text-align: center;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        #modal::-webkit-scrollbar {
-            display: none;
         }
 
         .unit-toggle-small {
@@ -249,7 +273,7 @@
                 -webkit-backdrop-filter: blur(12px);
                 border: 1px solid var(--border-color);
                 padding: 12px 20px;
-                border-radius: 12px;
+                border-radius: 6px;
             }
 
             .header-left {
@@ -267,7 +291,7 @@
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
                 border: 1px solid var(--border-color);
-                border-radius: 12px;
+                border-radius: 6px;
                 padding: 15px;
                 width: auto;
                 max-width: 500px;
@@ -275,6 +299,17 @@
 
             .zone-grid {
                 margin-top: 0;
+            }
+
+            html.light-mode .header-left,
+            html.light-mode .header-stats,
+            html.light-mode #guess-input-container,
+            body.light-mode .header-left,
+            body.light-mode .header-stats,
+            body.light-mode #guess-input-container {
+                background: rgba(255, 255, 255, 0.85);
+                border-color: #d0d0d0;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             }
         }
     </style>
@@ -313,16 +348,15 @@
         <div id="feedback-overlay" class="hidden">
             <div id="modal">
                 <h2 id="modal-title" style="font-size: 1.8rem; margin-bottom: 20px;"></h2>
-                <div id="modal-details" style="margin-bottom: 30px;"></div>
-                <button id="modal-btn" class="modal-btn"
-                    style="width:100%; background:#222; border:1px solid #333; color:#fff; padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">Continue</button>
+                <div id="modal-details" style="margin-bottom: 0;"></div>
+                <button id="modal-btn" class="modal-btn">Continue</button>
             </div>
         </div>
     </div>
 
     <script src="photosphere.js"></script>
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEmxm4qy5SK05sh4XLcrXeLYkYbAr8ZGM&callback=initStreetView"></script>
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEmxm4qy5SK05sh4XLcrXeLYkYbAr8ZGM&callback=initStreetView&loading=async"></script>
 </body>
 
 </html>

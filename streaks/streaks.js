@@ -154,13 +154,13 @@ function submitGuess(guess) {
         feedbackMsg.style.color = "#388e3c";
         const contrast = getContrastColor(guess.color);
         feedbackDetails.innerHTML = `
-            <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
-                <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
-                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
+            <div class="modal-detail-card">
+                <div class="modal-detail-label">LOCATION</div>
+                <div class="modal-detail-value">${currentCity.city.trim()}, ${currentCity.country}</div>
+                <div class="modal-detail-label">CORRECT CLIMATE</div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${guess.color}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${contrast};">${guess.code}</span>
-                    <span style="font-weight: 700; color: #fff;">${guess.description}</span>
+                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${guess.color}; border-radius:3px; font-size:0.65rem; font-weight:900; color:${contrast};">${guess.code}</span>
+                    <span class="modal-climate-name">${guess.description}</span>
                 </div>
             </div>
         `;
@@ -181,13 +181,13 @@ function submitGuess(guess) {
         const actualContrast = getContrastColor(actualColor);
 
         feedbackDetails.innerHTML = `
-            <div style="text-align: left; background: #050505; border: 1px solid #1a1a1a; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">LOCATION</div>
-                <div style="font-weight: 700; margin-bottom: 15px; font-size: 1.1rem;">${currentCity.city.trim()}, ${currentCity.country}</div>
-                <div style="color: var(--text-secondary); font-size: 0.65rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">CORRECT CLIMATE</div>
+            <div class="modal-detail-card">
+                <div class="modal-detail-label">LOCATION</div>
+                <div class="modal-detail-value">${currentCity.city.trim()}, ${currentCity.country}</div>
+                <div class="modal-detail-label">CORRECT CLIMATE</div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${actualColor}; border-radius:4px; font-size:0.65rem; font-weight:900; color:${actualContrast};">${actualCode}</span>
-                    <span style="font-weight: 700; color: #fff;">${actualDesc}</span>
+                    <span style="display:flex; justify-content:center; align-items:center; min-width:45px; height:20px; background:${actualColor}; border-radius:3px; font-size:0.65rem; font-weight:900; color:${actualContrast};">${actualCode}</span>
+                    <span class="modal-climate-name">${actualDesc}</span>
                 </div>
             </div>
         `;

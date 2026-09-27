@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="data:,">
+    <script>if (localStorage.getItem('site_theme') === 'light') document.documentElement.classList.add('light-mode');</script>
     <link rel="stylesheet" href="../streaks/streaks.css">
     <style>
         .home-link {
@@ -188,7 +189,7 @@
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             padding: 40px;
-            border-radius: 12px;
+            border-radius: 6px;
             text-align: center;
             width: 90%;
             max-width: 450px;
@@ -218,7 +219,7 @@
             width: 100%;
             background: var(--button-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 4px;
             padding: 15px 20px;
             color: var(--text-color);
             font-size: 1rem;
@@ -232,7 +233,7 @@
             right: 0;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 4px;
             margin-top: 5px;
             max-height: 250px;
             overflow-y: auto;
@@ -305,10 +306,10 @@
                 <div id="modal-content" style="margin-bottom: 30px;"></div>
                 <div style="display:flex; flex-direction:column; gap:12px;">
                     <button onclick="location.reload()" class="modal-btn"
-                        style="width:100%; background:var(--button-bg); border:1px solid var(--border-color); color:var(--text-color); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">New
+                        style="width:100%; background:var(--button-bg); border:1px solid var(--border-color); color:var(--text-color); padding:15px; border-radius:4px; font-weight:700; cursor:pointer;">New
                         Challenge</button>
                     <button id="view-guesses-btn" class="modal-btn"
-                        style="width:100%; background:transparent; border:1px solid #333; color:var(--text-secondary); padding:15px; border-radius:30px; font-weight:700; cursor:pointer;">View
+                        style="width:100%; background:transparent; border:1px solid #333; color:var(--text-secondary); padding:15px; border-radius:4px; font-weight:700; cursor:pointer;">View
                         Guesses</button>
                     <a href="../index.html"
                         style="color:var(--text-secondary); text-decoration:none; font-size:0.85rem; font-weight:700; margin-top: 10px;">Back

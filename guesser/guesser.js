@@ -350,18 +350,18 @@ function endGame() {
     const contrast = getContrastColor(targetCity.color);
 
     content.innerHTML = `
-        <div style="background:#050505; border:1px solid #1a1a1a; padding: 25px; border-radius: 8px; margin-bottom: 25px;">
-            <div style="color:var(--text-secondary); font-size: 0.6rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">TARGET CITY</div>
-            <div style="font-size: 1.8rem; font-weight: 700; color: #fff;">${targetCity.name}</div>
+        <div class="modal-detail-card" style="text-align:center; padding: 25px; margin-bottom: 25px;">
+            <div class="modal-detail-label">TARGET CITY</div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-color);">${targetCity.name}</div>
             <div style="color:var(--text-secondary); margin-bottom: 15px;">${targetCity.country}</div>
             
             <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
                 <span class="climate-pill" style="background:${targetCity.color}; color:${contrast}">${targetCity.code}</span>
-                <span style="font-weight:700; color:#fff">${targetCity.description}</span>
+                <span class="modal-climate-name">${targetCity.description}</span>
             </div>
         </div>
         <div style="color:var(--text-secondary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">SOLVED IN ${guesses} GUESSES</div>
-        <a href="https://ioncook.github.io/climate-visualizer/?lat=${targetCity.lat}&lng=${targetCity.lng}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&plat=${targetCity.lat}&plng=${targetCity.lng}&p=1" 
+        <a href="https://ioncook.github.io/climate-visualizer/?lat=${Number(targetCity.lat).toFixed(4)}&lng=${Number(targetCity.lng).toFixed(4)}&z=10.0&layer=koppen&m=6&era=1991_2020&comp=none&p=${Number(targetCity.lat).toFixed(4)},${Number(targetCity.lng).toFixed(4)}" 
            target="_blank" 
            style="display: block; margin-top: 20px; color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 700; opacity: 0.8;">
            View on Climate Visualizer →

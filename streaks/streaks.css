@@ -101,7 +101,7 @@ header h1 {
     align-items: flex-end;
     background: var(--card-bg);
     padding: 8px 15px;
-    border-radius: 8px;
+    border-radius: 4px;
     border: 1px solid var(--border-color);
 }
 
@@ -120,7 +120,7 @@ header h1 {
 
 .card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 6px;
     border: 1px solid var(--border-color);
     padding: 30px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -164,7 +164,7 @@ input[type="text"] {
     width: 100%;
     background: #0a0a0a;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 15px 20px;
     color: #fff;
     font-size: 1rem;
@@ -185,7 +185,7 @@ input[type="text"]:focus {
     right: 0;
     background: #0a0a0a;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 4px;
     max-height: 250px;
     overflow-y: auto;
     z-index: 1000;
@@ -231,12 +231,110 @@ input[type="text"]:focus {
 .modal-card, #modal {
     background: #050505;
     border: 1px solid #1a1a1a;
-    padding: 40px;
-    border-radius: 16px;
+    padding: 35px 35px 40px 35px;
+    border-radius: 6px;
     text-align: center;
     width: 90%;
     max-width: 450px;
     animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-detail-card {
+    text-align: left;
+    background: #0a0a0a;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 4px;
+    margin: 20px 0 0 0;
+}
+
+.modal-detail-label {
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.modal-detail-value {
+    font-weight: 700;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.modal-climate-name {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.modal-gap-label {
+    font-weight: 800;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.modal-closest-text {
+    font-size: 0.63rem;
+    color: var(--text-secondary);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+}
+
+.modal-closest-city {
+    color: var(--text-secondary);
+    margin-left: 5px;
+}
+
+.modal-history-row {
+    display: grid;
+    grid-template-columns: 25px 1fr 1.5fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.modal-history-num {
+    font-weight: 900;
+    color: var(--border-color);
+    font-size: 0.7rem;
+}
+
+.modal-history-city {
+    font-weight: 700;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.modal-street-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.5rem;
+    font-weight: 800;
+    border: 1px solid var(--border-color);
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+.modal-history-dist {
+    font-weight: 900;
+    color: var(--text-color);
+    font-size: 0.85rem;
+}
+
+.modal-total-dist {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 5px;
+    letter-spacing: -2px;
 }
 
 @keyframes modalIn {
@@ -247,11 +345,13 @@ input[type="text"]:focus {
 .modal-btn {
     width: 100%;
     padding: 15px;
-    border-radius: 30px;
+    border-radius: 4px;
     font-weight: 800;
     font-size: 1rem;
     cursor: pointer;
-    border: none;
+    border: 1px solid #333;
+    background: #222;
+    color: #fff;
     transition: transform 0.1s;
 }
 
@@ -260,7 +360,7 @@ input[type="text"]:focus {
 /* CLIMATE PILLS */
 .climate-pill {
     padding: 4px 12px;
-    border-radius: 6px;
+    border-radius: 3px;
     font-weight: 900;
     font-size: 0.85rem;
     display: inline-block;
@@ -305,4 +405,133 @@ input[type="text"]:focus {
 .tooltip.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* LIGHT MODE */
+html.light-mode, body.light-mode {
+    --bg-color: #f7f7f7;
+    --card-bg: #ffffff;
+    --border-color: #dedede;
+    --accent-color: #444444;
+    --text-color: #1a1a1a;
+    --text-secondary: #666666;
+    --button-bg: #e2e2e2;
+}
+
+html.light-mode .header-stats span, body.light-mode .header-stats span {
+    color: #111;
+}
+
+html.light-mode input[type="text"], body.light-mode input[type="text"] {
+    background: #ffffff;
+    color: #111;
+    border-color: var(--border-color);
+}
+
+html.light-mode #dropdown-options,
+html.light-mode #dropdown,
+body.light-mode #dropdown-options,
+body.light-mode #dropdown {
+    background: #ffffff;
+    border-color: var(--border-color);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+}
+
+html.light-mode .option, body.light-mode .option {
+    color: #111;
+    border-bottom: 1px solid var(--border-color);
+}
+
+html.light-mode .option:hover, body.light-mode .option:hover {
+    background: #f0f0f0;
+}
+
+html.light-mode #feedback-overlay,
+html.light-mode #game-over-overlay,
+body.light-mode #feedback-overlay,
+body.light-mode #game-over-overlay {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+html.light-mode .modal-card,
+html.light-mode #modal,
+body.light-mode .modal-card,
+body.light-mode #modal {
+    background: #ffffff;
+    border-color: #d0d0d0;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    color: #111;
+}
+
+html.light-mode .modal-btn, body.light-mode .modal-btn {
+    background: #e5e5e5 !important;
+    border: 1px solid #cccccc !important;
+    color: #111111 !important;
+}
+
+html.light-mode .modal-btn:hover, body.light-mode .modal-btn:hover {
+    background: #dadada !important;
+}
+
+html.light-mode #unit-toggle .active,
+html.light-mode #unit-toggle-small .active,
+body.light-mode #unit-toggle .active,
+body.light-mode #unit-toggle-small .active {
+    color: #111;
+}
+
+html.light-mode .tooltip, body.light-mode .tooltip {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #ccc;
+    color: #111;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+html.light-mode .zone-col-label, body.light-mode .zone-col-label {
+    color: #777;
+}
+
+html.light-mode .wrong, body.light-mode .wrong {
+    background: #f0f0f0 !important;
+    border-color: #dedede !important;
+    color: #111 !important;
+}
+
+html.light-mode .spark-row, body.light-mode .spark-row {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+html.light-mode .spark-row::before, body.light-mode .spark-row::before {
+    color: #333;
+    opacity: 0.5;
+}
+
+html.light-mode .bar, body.light-mode .bar {
+    background: #dedede;
+}
+
+html.light-mode .bar-arrow, body.light-mode .bar-arrow {
+    color: #222;
+}
+
+html.light-mode .modal-detail-card,
+body.light-mode .modal-detail-card {
+    background: #f5f5f5;
+    border-color: #d8d8d8;
+}
+
+html.light-mode .modal-history-row,
+body.light-mode .modal-history-row {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+html.light-mode .modal-street-link,
+body.light-mode .modal-street-link {
+    border-color: #d0d0d0;
+    color: #555;
+}
+
+/* CRITICAL: Preserve swatch text colors (do not swap or invert) */
+html.light-mode .zone-btn, body.light-mode .zone-btn {
+    color: #000 !important;
 }

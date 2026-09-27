@@ -71,7 +71,7 @@
         .mode-card {
             background: var(--card-bg);
             border: 1px solid #2a2a2a;
-            border-radius: 20px;
+            border-radius: 6px;
             padding: 40px;
             text-decoration: none;
             color: inherit;
@@ -102,7 +102,7 @@
             background: rgba(171, 171, 171, 0.1);
             color: var(--accent-color);
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 1px;
@@ -164,44 +164,95 @@
             }
         }
 
-        /* Unit Toggle Standard */
-        #unit-toggle {
+        /* Controls Container (Unit & Theme) */
+        #controls-container {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        #unit-toggle, #theme-toggle {
             background: var(--card-bg);
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--border-color);
             padding: 8px 16px;
-            border-radius: 30px;
+            border-radius: 4px;
             display: flex;
             gap: 12px;
             font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
-            z-index: 1000;
             transition: all 0.2s;
+            user-select: none;
         }
 
-        #unit-toggle:hover {
-            border-color: #444;
+        #unit-toggle:hover, #theme-toggle:hover {
+            border-color: #666;
         }
 
-        .unit.active {
+        .unit.active, .theme-opt.active {
             color: var(--text-color);
         }
 
-        .unit {
-            color: #444;
+        .unit, .theme-opt {
+            color: var(--text-secondary);
             transition: color 0.2s;
+        }
+
+        .toggle-sep {
+            color: var(--border-color);
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --accent-color: #444444;
+            --text-color: #111111;
+            --text-secondary: #666666;
+            --border-color: #d8d8d8;
+        }
+
+        body.light-mode .hero h1 {
+            background: #222222;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.light-mode .mode-card:hover {
+            background: #f0f0f0;
+            border-color: var(--accent-color);
+        }
+
+        body.light-mode .best-score {
+            border-top: 1px solid var(--border-color);
+            color: #777777;
+        }
+
+        body.light-mode .badge {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
 
 <body>
-    <div id="unit-toggle">
-        <span id="unit-metric" class="unit active">Metric</span>
-        <span style="color:#2a2a2a">|</span>
-        <span id="unit-imperial" class="unit">Imperial</span>
+    <div id="controls-container">
+        <div id="unit-toggle">
+            <span id="unit-metric" class="unit active">Metric</span>
+            <span class="toggle-sep">|</span>
+            <span id="unit-imperial" class="unit">Imperial</span>
+        </div>
+        <div id="theme-toggle">
+            <span id="theme-dark" class="theme-opt active">Dark</span>
+            <span class="toggle-sep">|</span>
+            <span id="theme-light" class="theme-opt">Light</span>
+        </div>
     </div>
 
     <div class="hero" style="display:flex; align-items:center; justify-content:center; gap:20px;">
@@ -214,26 +265,23 @@
     <div class="modes-grid">
         <a href="streaks/" class="mode-card">
 
-            <div class="mode-icon">🔥</div>
             <div class="mode-title">Streaks</div>
-            <div class="mode-desc">Identify the Köppen zone of a given city; guess as many as you can in a row. </div>
+            <div class="mode-desc">Identify the Köppen zone of a given city; guess as many as you can in a row </div>
             <div class="best-score">Best Streak: <strong id="best-streaks">0</strong></div>
         </a>
 
         <a href="photosphere/" class="mode-card">
-            <div class="mode-icon">🖼️</div>
             <div class="mode-title">Photo Sphere</div>
-            <div class="mode-desc">Guess the Köppen zone from a photo sphere. 5 rounds per game, aim for zero distance.
+            <div class="mode-desc">Guess the Köppen zone from a photo sphere. 5 rounds per game, aim for zero distance
             </div>
             <div class="best-score">Min Distance: <strong id="best-photosphere">---</strong></div>
         </a>
 
         <a href="guesser/" class="mode-card">
 
-            <div class="mode-icon">🔭</div>
             <div class="mode-title">Data Guesser</div>
-            <div class="mode-desc">Guess a mystery city based off of the difference to other cities. Aim for the fewest
-                guesses possible.</div>
+            <div class="mode-desc">Guess a mystery city based off of the difference in climate data to other cities,
+                fewest guesses possible</div>
             <div class="best-score">Min Guesses: <strong id="best-guesser">---</strong></div>
         </a>
     </div>
@@ -241,8 +289,20 @@
 
 
     <script>
-        // Use Global Unit State
+        // Use Global Unit & Theme State
         let currentUnits = localStorage.getItem('site_units') || 'metric';
+        let currentTheme = localStorage.getItem('site_theme') || 'dark';
+
+        function syncThemeUI() {
+            if (currentTheme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            document.querySelectorAll('.theme-opt').forEach(t => t.classList.remove('active'));
+            const activeEl = document.getElementById(`theme-${currentTheme}`);
+            if (activeEl) activeEl.classList.add('active');
+        }
 
         function syncUI() {
             document.querySelectorAll('.unit').forEach(u => u.classList.remove('active'));
@@ -256,6 +316,12 @@
             currentUnits = currentUnits === 'metric' ? 'imperial' : 'metric';
             localStorage.setItem('site_units', currentUnits);
             syncUI();
+        };
+
+        document.getElementById('theme-toggle').onclick = () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('site_theme', currentTheme);
+            syncThemeUI();
         };
 
         function renderScores() {
@@ -278,6 +344,7 @@
             document.getElementById('best-guesser').textContent = bestGuesser ? bestGuesser : '---';
         }
 
+        syncThemeUI();
         syncUI();
     </script>
 </body>
